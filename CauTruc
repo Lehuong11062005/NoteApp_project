@@ -1,0 +1,154 @@
+# Cấu trúc dự án Smart & Secure Note Assistant
+
+```text
+NoteApp/
+│
+├── backend/                               # Máy chủ (Server) xử lý toàn bộ nghiệp vụ
+│   │
+│   ├── app/
+│   │   │
+│   │   ├── config/                        # Chứa các file cấu hình hệ thống
+│   │   │   ├── database.py                # Kết nối MongoDB Atlas
+│   │   │   └── settings.py                # Biến môi trường, JWT Secret, Upload Folder...
+│   │   │
+│   │   ├── models/                        # Định nghĩa cấu trúc dữ liệu (Model)
+│   │   │   ├── user.py                    # Model User
+│   │   │   ├── note.py                    # Model Note
+│   │   │   ├── reminder.py                # Model Reminder
+│   │   │   └── category.py                # Model Category (nếu có)
+│   │   │
+│   │   ├── schemas/                       # Kiểm tra dữ liệu gửi từ Client (Validation)
+│   │   │   ├── auth_schema.py             # Validate Login/Register
+│   │   │   ├── note_schema.py             # Validate tạo/sửa ghi chú
+│   │   │   ├── reminder_schema.py         # Validate Reminder
+│   │   │   └── dashboard_schema.py        # Schema Dashboard
+│   │   │
+│   │   ├── repositories/                  # Chỉ thao tác với MongoDB
+│   │   │   ├── user_repository.py         # CRUD User
+│   │   │   ├── note_repository.py         # CRUD Note
+│   │   │   ├── reminder_repository.py     # CRUD Reminder
+│   │   │   └── category_repository.py     # CRUD Category
+│   │   │
+│   │   ├── services/                      # Xử lý toàn bộ nghiệp vụ
+│   │   │   ├── auth_service.py            # Đăng ký, đăng nhập, JWT, Bcrypt
+│   │   │   ├── note_service.py            # CRUD, Search, Filter, Sort
+│   │   │   ├── reminder_service.py        # Kiểm tra lịch nhắc
+│   │   │   ├── ai_service.py              # Auto Tag, Voice Processing
+│   │   │   ├── dashboard_service.py       # Aggregate MongoDB, thống kê
+│   │   │   └── upload_service.py          # Upload ảnh
+│   │   │
+│   │   ├── routes/                        # REST API
+│   │   │   ├── auth.py                    # API Login/Register
+│   │   │   ├── notes.py                   # API CRUD Note
+│   │   │   ├── reminders.py               # API Reminder
+│   │   │   ├── dashboard.py               # API Dashboard
+│   │   │   └── upload.py                  # API Upload Image
+│   │   │
+│   │   ├── middleware/                    # Chạy trước khi API xử lý
+│   │   │   ├── jwt_auth.py                # Kiểm tra JWT Token
+│   │   │   ├── permission.py              # Kiểm tra quyền người dùng
+│   │   │   └── logging.py                 # Ghi log Request
+│   │   │
+│   │   ├── utils/                         # Hàm dùng chung
+│   │   │   ├── password.py                # Hash & Verify Password
+│   │   │   ├── response.py                # Chuẩn hóa Response API
+│   │   │   ├── validator.py               # Hàm kiểm tra dữ liệu
+│   │   │   ├── datetime_helper.py         # Xử lý ngày giờ
+│   │   │   └── regex_helper.py            # Hỗ trợ Regex Search
+│   │   │
+│   │   ├── uploads/                       # Thư mục lưu file upload
+│   │   │   ├── images/                    # Ảnh ghi chú
+│   │   │   └── avatars/                   # Ảnh đại diện
+│   │   │
+│   │   └── main.py                        # Điểm khởi động FastAPI
+│   │
+│   └── requirements.txt                   # Danh sách thư viện Backend
+│
+├── frontend/                              # Ứng dụng Desktop Tkinter
+│   │
+│   ├── assets/                            # Tài nguyên giao diện
+│   │   ├── icons/                         # Icon
+│   │   ├── images/                        # Ảnh giao diện
+│   │   └── themes/                        # Theme Tkinter
+│   │
+│   ├── views/                             # Toàn bộ giao diện
+│   │   ├── login_view.py                  # Màn hình đăng nhập
+│   │   ├── register_view.py               # Màn hình đăng ký
+│   │   ├── dashboard_view.py              # Dashboard thống kê
+│   │   ├── note_view.py                   # Giao diện ghi chú
+│   │   ├── reminder_view.py               # Giao diện Reminder
+│   │   └── profile_view.py                # Hồ sơ người dùng
+│   │
+│   ├── controllers/                       # Điều khiển giao diện
+│   │   ├── auth_controller.py             # Xử lý Login/Register
+│   │   ├── note_controller.py             # Xử lý CRUD Note
+│   │   ├── reminder_controller.py         # Xử lý Reminder
+│   │   └── dashboard_controller.py        # Xử lý Dashboard
+│   │
+│   ├── services/                          # Gọi REST API
+│   │   ├── api_client.py                  # Cấu hình requests
+│   │   ├── auth_api.py                    # API Login/Register
+│   │   ├── note_api.py                    # API Note
+│   │   ├── reminder_api.py                # API Reminder
+│   │   ├── dashboard_api.py               # API Dashboard
+│   │   └── upload_api.py                  # API Upload
+│   │
+│   ├── models/                            # Model dữ liệu phía Client
+│   │   ├── user.py
+│   │   ├── note.py
+│   │   └── reminder.py
+│   │
+│   ├── utils/                             # Hàm dùng chung Frontend
+│   │   ├── messagebox.py                  # Hiển thị thông báo
+│   │   ├── file_helper.py                 # Chọn file ảnh
+│   │   ├── speech.py                      # Voice To Text
+│   │   └── notification.py                # Desktop Notification
+│   │
+│   └── main.py                            # Khởi động Tkinter
+│
+├── docs/                                  # Tài liệu dự án
+│   ├── Software_Requirement.md            # Đặc tả yêu cầu
+│   ├── UseCase.pdf                        # Use Case Diagram
+│   ├── ClassDiagram.pdf                   # Class Diagram
+│   ├── SequenceDiagram.pdf                # Sequence Diagram
+│   ├── DatabaseDesign.pdf                 # Thiết kế MongoDB
+│   ├── API_Document.pdf                   # Danh sách REST API
+│   └── Deployment.pdf                     # Hướng dẫn triển khai
+│
+├── tests/                                 # Unit Test / API Test
+│   ├── test_auth.py
+│   ├── test_note.py
+│   └── test_dashboard.py
+│
+├── .env                                   # Biến môi trường
+├── .gitignore                             # File bỏ qua khi dùng Git
+├── README.md                              # Hướng dẫn cài đặt và chạy dự án
+└── requirements.txt                       # Danh sách thư viện toàn dự án
+```
+
+## Nguyên tắc phân chia nhiệm vụ
+
+* **config:** Chỉ chứa cấu hình hệ thống, không viết nghiệp vụ.
+* **models:** Định nghĩa cấu trúc dữ liệu (User, Note, Reminder...).
+* **schemas:** Kiểm tra dữ liệu đầu vào trước khi xử lý.
+* **repositories:** Chỉ làm việc với MongoDB (CRUD), không chứa logic nghiệp vụ.
+* **services:** Chứa toàn bộ logic của hệ thống (đăng nhập, CRUD, Auto Tag, Dashboard...).
+* **routes:** Định nghĩa các REST API, nhận Request và trả Response.
+* **middleware:** Kiểm tra Token, quyền truy cập và ghi log trước khi API chạy.
+* **utils:** Các hàm hỗ trợ dùng chung cho nhiều module.
+* **uploads:** Lưu trữ ảnh và tệp người dùng tải lên.
+
+Phía Frontend:
+
+* **views:** Chỉ xây dựng giao diện Tkinter, không xử lý nghiệp vụ.
+* **controllers:** Nhận sự kiện từ giao diện (Button, Menu...), gọi API và cập nhật View.
+* **services:** Gửi Request HTTP tới Backend bằng `requests`.
+* **models:** Đại diện dữ liệu nhận từ Backend.
+* **utils:** Các tiện ích như Voice-to-Text, Notification, MessageBox...
+* **assets:** Chứa ảnh, icon và theme của ứng dụng.
+
+Luồng xử lý chuẩn của hệ thống:
+
+**Tkinter View → Controller → API Service → FastAPI Route → Service → Repository → MongoDB → Response → Controller → View**
+
+Đây là kiến trúc phân lớp (Layered Architecture) theo mô hình Client–Server, giúp dễ bảo trì, dễ phân chia công việc giữa các thành viên và thuận lợi mở rộng trong tương lai.
