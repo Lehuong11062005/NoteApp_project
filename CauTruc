@@ -9,8 +9,6 @@ NoteApp/
 │   │   │
 │   │   ├── config/                        # Chứa các file cấu hình hệ thống
 │   │   │   ├── database.py                # Kết nối MongoDB Atlas
-│   │   │   └── settings.py                # Biến môi trường, JWT Secret, Upload Folder...
-│   │   │
 │   │   ├── models/                        # Định nghĩa cấu trúc dữ liệu (Model)
 │   │   │   ├── user.py                    # Model User
 │   │   │   ├── note.py                    # Model Note
@@ -62,6 +60,7 @@ NoteApp/
 │   │   │
 │   │   └── main.py                        # Điểm khởi động FastAPI
 │   │
+|   |--.env                                #Biến môi trường
 │   └── requirements.txt                   # Danh sách thư viện Backend
 │
 ├── frontend/                              # Ứng dụng Desktop Tkinter

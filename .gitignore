@@ -1,9 +1,9 @@
 # ==========================================
 # 1. Môi trường ảo (Virtual Environments - Rất nặng)
 # ==========================================
-venv/
-env/
-.venv/
+# venv/
+# env/
+# .venv/
 
 # ==========================================
 # 2. Python Cache & Logs (File rác sinh ra khi chạy)
