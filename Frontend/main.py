@@ -15,14 +15,10 @@ def launch_app():
         root.destroy()
         return
 
-    # 2. Khởi tạo màn hình chính nếu kết nối thông suốt
-    window = tk.Tk()
-    window.title("Ứng dụng Ghi chú Cá nhân")
-    
-    label = tk.Label(window, text=f"Kết nối Server thành công!\n{data}", )
-    label.pack()
-    
-    window.mainloop()
+    # 2. Mở màn hình đăng nhập nếu kết nối thông suốt
+    from Frontend.views.login_view import LoginView
+    app = LoginView()
+    app.mainloop()
 
 if __name__ == "__main__":
     launch_app()

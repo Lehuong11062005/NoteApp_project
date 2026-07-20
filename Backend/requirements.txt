@@ -1,2 +1,8 @@
 pymongo
 python-dotenv
+fastapi
+uvicorn[standard]
+python-jose[cryptography]
+bcrypt
+passlib[bcrypt]
+python-multipart
