@@ -1,2 +1,6 @@
+<<<<<<< HEAD
 python-dotenv
 requests
+=======
+python-dotenv
+>>>>>>> 2db6bcaa98c79f9581031568735fa75e7ee61a90

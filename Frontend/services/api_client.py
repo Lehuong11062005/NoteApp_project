@@ -18,6 +18,7 @@ class APIClient:
         except requests.exceptions.ConnectionError:
             return False,"Khong the ket noi  database"
 
+<<<<<<< HEAD
 import requests
 
 BASE_URL = "http://localhost:8000"
@@ -66,3 +67,5 @@ def logout():
     Sau khi gọi hàm này, mọi API cần xác thực đều sẽ thất bại."""
     global CURRENT_JWT_TOKEN
     CURRENT_JWT_TOKEN = None
+=======
+>>>>>>> 2db6bcaa98c79f9581031568735fa75e7ee61a90

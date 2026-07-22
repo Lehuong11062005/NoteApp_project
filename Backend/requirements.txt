@@ -1,8 +1,11 @@
 pymongo
 python-dotenv
+<<<<<<< HEAD
 fastapi
 uvicorn[standard]
 python-jose[cryptography]
 bcrypt
 passlib[bcrypt]
 python-multipart
+=======
+>>>>>>> 2db6bcaa98c79f9581031568735fa75e7ee61a90
