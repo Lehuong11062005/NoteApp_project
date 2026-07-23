@@ -35,3 +35,15 @@ dist/
 # macOS / Windows
 .DS_Store
 Thumbs.db
+# Bỏ qua tất cả ngoại trừ Backend và Frontend
+*
+!/Backend/
+!/Frontend/
+!.gitignore
+
+# Bỏ qua các file cache Python bên trong
+__pycache__/
+*.pyc
+.vscode/
+venv/
+env/
