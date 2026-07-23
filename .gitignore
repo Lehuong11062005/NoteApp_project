@@ -1,0 +1,42 @@
+# ==========================================
+# 1. Môi trường ảo (Virtual Environments - Rất nặng)
+# ==========================================
+# venv/
+# env/
+# .venv/
+
+# ==========================================
+# 2. Python Cache & Logs (File rác sinh ra khi chạy)
+# ==========================================
+__pycache__/
+*.py[cod]
+*.log
+
+# ==========================================
+# 3. Thư mục chứa ảnh Upload (Làm nặng kho lưu trữ)
+# ==========================================
+uploads/
+data/media/
+
+# ==========================================
+# 4. Build & Đóng gói PyInstaller (File output rất nặng)
+# ==========================================
+build/
+dist/
+*.spec
+*.exe
+
+# ==========================================
+# 5. Cấu hình IDE & Hệ điều hành (File linh tinh)
+# ==========================================
+# VS Code / PyCharm
+.vscode/
+.idea/
+# macOS / Windows
+.DS_Store
+Thumbs.db
+
+.vs/
+*.sqlite
+*.suo
+*.user

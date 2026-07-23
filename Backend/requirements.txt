@@ -1,0 +1,6 @@
+pymongo
+python-dotenv
+
+PyJWT
+passlib[bcrypt]
+python-multipart
