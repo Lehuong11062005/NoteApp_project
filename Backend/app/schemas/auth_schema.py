@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from typing import Optional
 
 class LoginRequest(BaseModel):
@@ -13,7 +13,7 @@ class RegisterRequest(BaseModel):
     """Dữ liệu gửi lên khi đăng kí tài khoản mới."""
     username: str = Field(..., min_length=3, max_length=50)
     password: str = Field(..., min_length=6)
-    email: Optional[str] = None
+    email: Optional[EmailStr] = None  # Đã nâng cấp: Tự động validate định dạng email
     full_name: Optional[str] = None
 
 class RegisterResponse(BaseModel):
@@ -25,6 +25,6 @@ class UserProfileResponse(BaseModel):
     """Schema trả về thông tin cá nhân user từ GET /auth/profile"""
     user_id: str
     username: str
-    email: Optional[str] = None
+    email: Optional[EmailStr] = None  # Đã nâng cấp
     full_name: Optional[str] = None
     created_at: Optional[str] = None

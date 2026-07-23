@@ -1,11 +1,12 @@
 from fastapi import HTTPException, status
+from pymongo.database import Database
 from app.schemas.auth_schema import LoginRequest, TokenResponse, UserProfileResponse, RegisterRequest, RegisterResponse
 from app.repositories import user_repository
 from app.utils.password import verify_password, get_password_hash
 from app.middleware.jwt_auth import create_access_token
 from app.models.user import create_user_document
 
-def authenticate_user(db, request: LoginRequest) -> TokenResponse:
+def authenticate_user(db: Database, request: LoginRequest) -> TokenResponse:
     user = user_repository.get_user_by_username(db, request.username)
     
     # Check user tồn tại và so sánh password
@@ -22,7 +23,7 @@ def authenticate_user(db, request: LoginRequest) -> TokenResponse:
     
     return TokenResponse(access_token=access_token, token_type="bearer")
 
-def get_profile(db, current_user: dict) -> UserProfileResponse:
+def get_profile(db: Database, current_user: dict) -> UserProfileResponse:
     """Lấy thông tin cá nhân user đang đăng nhập dựa vào token.
     current_user là dict {username, user_id} giải mã từ JWT."""
     user = user_repository.get_user_by_id(db, current_user["user_id"])
@@ -48,7 +49,7 @@ def get_profile(db, current_user: dict) -> UserProfileResponse:
         created_at=created_at
     )
 
-def register_user(db, request: RegisterRequest) -> RegisterResponse:
+def register_user(db: Database, request: RegisterRequest) -> RegisterResponse:
     """Xử lý đăng kí tài khoản mới:
     1. Kiểm tra username đã tồn tại chưa
     2. Hash password bằng bcrypt

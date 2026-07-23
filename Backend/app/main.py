@@ -1,29 +1,25 @@
 from fastapi import FastAPI
-# from app.config.database import get_database,close_database
+# from app.config.database import get_database, close_database
 import os
 from dotenv import load_dotenv
 
-<<<<<<< HEAD
 # 1. Import file auth.py từ thư mục routes
 from app.routes import auth 
 
-=======
->>>>>>> 2db6bcaa98c79f9581031568735fa75e7ee61a90
 load_dotenv()
-host_url=os.getenv("host")
+# Lấy biến môi trường HOST, nếu file .env chưa có thì mặc định dùng "127.0.0.1"
+host_url = os.getenv("HOST", "127.0.0.1")
 
-app=FastAPI(title="The Project of Group 6")
+app = FastAPI(title="The Project of Group 6")
 
-<<<<<<< HEAD
 # 2. Đăng ký router auth vào app
 app.include_router(auth.router)
 
-=======
->>>>>>> 2db6bcaa98c79f9581031568735fa75e7ee61a90
 @app.get("/")
 def root():
-    return {"messsage" : "Server hoat dong on dinh"}
+    return {"message": "Server hoat dong on dinh"}
 
-if __name__ =="__main__":
+if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app",host=host_url,port=8000,reload=True)
+    # Cập nhật thành "app.main:app" để uvicorn hiểu đúng đường dẫn file
+    uvicorn.run("app.main:app", host=host_url, port=8000, reload=True)

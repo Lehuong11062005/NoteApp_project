@@ -1,12 +1,8 @@
-import sys
-import os
-
-# Thêm thư mục gốc của project vào đường dẫn hệ thống để Python nhận diện được package "Frontend"
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 import tkinter as tk
 from tkinter import ttk
-from Frontend.controllers.auth_controller import AuthController
+
+# Bỏ chữ 'Frontend.' để đồng bộ với cách gọi từ main.py
+from controllers.auth_controller import AuthController
 
 class LoginView(tk.Tk):
     def __init__(self):
@@ -33,6 +29,8 @@ class LoginView(tk.Tk):
         self.entry_password.grid(row=1, column=1, pady=5, padx=5)
 
         ttk.Button(self, text="Đăng nhập", command=self.controller.handle_login).pack(pady=20)
+        
+        # Cho phép người dùng nhấn phím Enter để đăng nhập nhanh
         self.bind('<Return>', lambda e: self.controller.handle_login())
 
 if __name__ == "__main__":

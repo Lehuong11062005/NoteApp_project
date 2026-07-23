@@ -1,27 +1,28 @@
 import os
+import requests
 from dotenv import load_dotenv
 
-import requests
+load_dotenv()
 
 class APIClient:
-    # Lấy biến của mỗi trường  link của backend
-    load_dotenv()
-    Base_URL=os.getenv("BASE_URL")
+    # Lấy biến môi trường, nếu không có sẽ tự động dùng localhost:8000
+    Base_URL = os.getenv("BASE_URL", "http://localhost:8000")
 
     @staticmethod
     def check_server():
         try:
-            response=requests.get(f"{APIClient.Base_URL}")
-            if response.status_code== 200:
-                return True,'Kết nối thành công'
-            return False,f"Loi ket noi  database {response.status_code}"
+            response = requests.get(f"{APIClient.Base_URL}")
+            if response.status_code == 200:
+                return True, 'Kết nối thành công'
+            return False, f"Lỗi kết nối server: {response.status_code}"
         except requests.exceptions.ConnectionError:
-            return False,"Khong the ket noi  database"
+            return False, "Không thể kết nối đến server Backend"
 
-<<<<<<< HEAD
-import requests
+# ==========================================
+# CÁC HÀM XỬ LÝ ĐĂNG NHẬP VÀ XÁC THỰC (JWT)
+# ==========================================
 
-BASE_URL = "http://localhost:8000"
+BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
 CURRENT_JWT_TOKEN = None 
 
 def login_api(username, password):
@@ -67,5 +68,3 @@ def logout():
     Sau khi gọi hàm này, mọi API cần xác thực đều sẽ thất bại."""
     global CURRENT_JWT_TOKEN
     CURRENT_JWT_TOKEN = None
-=======
->>>>>>> 2db6bcaa98c79f9581031568735fa75e7ee61a90
