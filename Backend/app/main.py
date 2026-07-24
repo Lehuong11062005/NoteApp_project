@@ -1,12 +1,13 @@
 from fastapi import FastAPI
-from app.config.database import get_database,close_database
+from app.config.database import get_database, close_database
 import os
 from dotenv import load_dotenv
 from app.routes.notes import router as note_router
+from app.routes.auth import router as auth_router  # <--- Bổ sung import auth router
 from contextlib import asynccontextmanager
 
 load_dotenv()
-host_url=os.getenv("host")
+host_url = os.getenv("host")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -19,14 +20,16 @@ async def lifespan(app: FastAPI):
     # Code chạy khi ứng dụng DỪNG (Shutdown)
     close_database()
 
-app=FastAPI(title="The Project of Group 6",lifespan=lifespan)
+app = FastAPI(title="The Project of Group 6", lifespan=lifespan)
 
-app.include_router(note_router,prefix="/api")
+# Đăng ký các router vào ứng dụng
+app.include_router(note_router, prefix="/api")
+app.include_router(auth_router, prefix="/api")  # <--- Gắn auth router vào tiền tố /api (hoặc để trống tùy cấu trúc của bạn)
 
 @app.get("/")
 def root():
-    return {"messsage" : "Server hoat dong on dinh"}
+    return {"message": "Server hoat dong on dinh"}
 
-if __name__ =="__main__":
+if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app",host=host_url,port=8000,reload=True)
+    uvicorn.run("main:app", host=host_url, port=8000, reload=True)
