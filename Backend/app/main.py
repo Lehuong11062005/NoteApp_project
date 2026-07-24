@@ -11,20 +11,17 @@ host_url = os.getenv("host")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Code chạy khi ứng dụng BẮT ĐẦU
     get_database()
     print("Đã kết nối MongoDB.")
     
     yield
     
-    # Code chạy khi ứng dụng DỪNG (Shutdown)
     close_database()
 
 app = FastAPI(title="The Project of Group 6", lifespan=lifespan)
 
-# Đăng ký các router vào ứng dụng
 app.include_router(note_router, prefix="/api")
-app.include_router(auth_router, prefix="/api")  # <--- Gắn auth router vào tiền tố /api (hoặc để trống tùy cấu trúc của bạn)
+app.include_router(auth_router, prefix="/api")  
 
 @app.get("/")
 def root():

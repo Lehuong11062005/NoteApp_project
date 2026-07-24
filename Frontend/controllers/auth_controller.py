@@ -17,7 +17,7 @@ class AuthController:
 
         if is_success:
             show_success("Thành công", message)
-            self.view.destroy() # Đóng form login (Sau này sẽ gọi code mở form chính ở đây)
+            self.view.destroy() 
         else:
             if status_code == 401:
                 show_error("Lỗi 401", message)

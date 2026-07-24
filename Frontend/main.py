@@ -1,16 +1,14 @@
 import sys
 import os
 
-# Thêm đường dẫn gốc để Python nhận diện các package
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import tkinter as tk
 from tkinter import messagebox
 from Frontend.services.api_client import APIClient
-from Frontend.views.login_view import LoginView  # <--- Import màn hình Đăng nhập
+from Frontend.views.login_view import LoginView  
 
 def launch_app():
-    # 1. Kiểm tra kết nối tới Backend trước khi mở app
     is_alive, data = APIClient.check_server()
     
     if not is_alive:
@@ -20,7 +18,6 @@ def launch_app():
         root.destroy()
         return
 
-    # 2. Khởi động ứng dụng bằng màn hình Đăng nhập
     app = LoginView()
     app.mainloop()
 

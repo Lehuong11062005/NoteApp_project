@@ -3,7 +3,6 @@ from dotenv import load_dotenv
 import requests
 
 class APIClient:
-    # Lấy biến môi trường link của backend
     load_dotenv()
     Base_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000")
 
@@ -42,6 +41,5 @@ class APIClient:
         except requests.exceptions.Timeout:
             return False, "Kết nối tới máy chủ quá thời gian!", 508
 
-# Hàm module-level để tương thích trực tiếp với lệnh gọi từ auth_controller
 def login_api(username, password):
     return APIClient.login_api(username, password)

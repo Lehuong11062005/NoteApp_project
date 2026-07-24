@@ -1,7 +1,6 @@
 import sys
 import os
 
-# Thêm thư mục gốc của project vào đường dẫn hệ thống để Python nhận diện được package "Frontend"
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import tkinter as tk
