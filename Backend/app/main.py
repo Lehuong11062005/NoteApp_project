@@ -1,18 +1,27 @@
 from fastapi import FastAPI
-# from app.config.database import get_database,close_database
+from app.config.database import get_database,close_database
 import os
 from dotenv import load_dotenv
-
-# 1. Import file auth.py từ thư mục routes
-from app.routes import auth 
+from app.routes.notes import router as note_router
+from contextlib import asynccontextmanager
 
 load_dotenv()
 host_url=os.getenv("host")
 
-app=FastAPI(title="The Project of Group 6")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Code chạy khi ứng dụng BẮT ĐẦU
+    get_database()
+    print("Đã kết nối MongoDB.")
+    
+    yield
+    
+    # Code chạy khi ứng dụng DỪNG (Shutdown)
+    close_database()
 
-# 2. Đăng ký router auth vào app
-app.include_router(auth.router)
+app=FastAPI(title="The Project of Group 6",lifespan=lifespan)
+
+app.include_router(note_router,prefix="/api")
 
 @app.get("/")
 def root():

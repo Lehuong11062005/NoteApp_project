@@ -35,3 +35,8 @@ dist/
 # macOS / Windows
 .DS_Store
 Thumbs.db
+
+.vs/
+*.sqlite
+*.suo
+*.user
