@@ -27,4 +27,5 @@ class UserProfileResponse(BaseModel):
     username: str
     email: Optional[str] = None
     full_name: Optional[str] = None
+    avatar_url: Optional[str] = None
     created_at: Optional[str] = None

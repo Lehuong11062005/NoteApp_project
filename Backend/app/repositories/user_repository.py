@@ -1,4 +1,5 @@
 from bson import ObjectId
+from datetime import datetime
 
 def get_user_by_username(db, username: str):
     """Tìm user trong MongoDB theo username"""
@@ -16,3 +17,18 @@ def create_user(db, user_document: dict) -> str:
     Trả về inserted_id dưới dạng chuỗi."""
     result = db["users"].insert_one(user_document)
     return str(result.inserted_id)
+
+def update_avatar(db, user_id: str, avatar_url: str) -> bool:
+    """Cập nhật URL ảnh đại diện của user trong MongoDB.
+    Trả về True nếu cập nhật thành công, False nếu không tìm thấy user."""
+    try:
+        result = db["users"].update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {
+                "avatar_url": avatar_url,
+                "updated_at": datetime.utcnow()
+            }}
+        )
+        return result.matched_count > 0
+    except Exception:
+        return False

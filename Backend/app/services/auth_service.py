@@ -45,6 +45,7 @@ def get_profile(db, current_user: dict) -> UserProfileResponse:
         username=user.get("username", ""),
         email=user.get("email"),
         full_name=user.get("full_name"),
+        avatar_url=user.get("avatar_url"),
         created_at=created_at
     )
 
