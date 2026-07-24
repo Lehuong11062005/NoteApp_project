@@ -19,7 +19,15 @@ class AuthController:
             show_success("Thành công", message)
             self.view.destroy() 
         else:
-            if status_code == 401:
-                show_error("Lỗi 401", message)
+            display_msg = message
+            
+            if isinstance(message, list):
+                error_msgs = [err.get("msg", "Lỗi dữ liệu") for err in message if isinstance(err, dict)]
+                display_msg = "\n".join(error_msgs) if error_msgs else "Dữ liệu không hợp lệ."
+            elif isinstance(message, dict):
+                display_msg = message.get("detail", "Đăng nhập thất bại.")
+
+            if status_code == 401 or status_code == 422:
+                show_error("Thông báo", display_msg)
             else:
-                show_error("Lỗi", message)
+                show_error("Lỗi đăng nhập", display_msg)
