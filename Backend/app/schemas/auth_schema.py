@@ -55,7 +55,7 @@ class LoginRequest(BaseModel):
     @classmethod
     def validate_login_password(cls, value: str) -> str:
         if not value or len(value) < 8:
-            raise ValueError("Mật khẩu đăng nhập cần phải có từ 8 ký tự trở lên.")
+            raise ValueError("Mật khẩu đăng nhập cần phải có từ 8 ký tự .")
         return value
 
 class TokenResponse(BaseModel):
