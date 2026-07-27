@@ -3,12 +3,11 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import ttk
 
-# Tự động thêm đường dẫn module Frontend vào sys.path
-sys.path.append(str(Path(__file__).resolve().parent))
-
-from services.auth_api import AuthAPI
-from controllers.auth_controller import AuthController
-from views.register import RegisterView
+# Dùng import tuyệt đối chuẩn package
+from Frontend.services.api_client import APIClient
+from Frontend.controllers.auth_controller import AuthController
+from Frontend.views.register import RegisterView
+from Frontend.views.login_view import LoginView
 
 
 class MainApp(tk.Tk):
@@ -25,7 +24,7 @@ class MainApp(tk.Tk):
         self._build_ui()
 
     def _check_backend_status(self):
-        is_alive, data = AuthAPI.check_server()
+        is_alive, data = APIClient.check_server()
         if is_alive:
             msg = data.get("message", "Server đang hoạt động") if isinstance(data, dict) else str(data)
             status_text = f"✅ {msg}"
@@ -58,8 +57,9 @@ class MainApp(tk.Tk):
         reg_view.controller = controller
 
     def open_login_window(self):
-        # Mở view Đăng nhập khi cần
-        pass
+        login_view = LoginView(self)
+        controller = AuthController(login_view)
+        login_view.controller = controller
 
 
 if __name__ == "__main__":
