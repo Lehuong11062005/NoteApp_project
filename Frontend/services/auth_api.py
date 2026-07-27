@@ -1,62 +1,55 @@
-import os
 import requests
-from dotenv import load_dotenv
+from Frontend.services.api_client import APIClient
 
-load_dotenv()
-
-BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000")
-TIMEOUT_SECONDS = 5
-
-class AuthAPI:
-    @staticmethod
-    def check_server():
-        """Kiểm tra xem Backend server có đang kết nối được không"""
-        try:
-            response = requests.get(f"{BASE_URL}/", timeout=TIMEOUT_SECONDS)
-            if response.status_code == 200:
-                return True, response.json()
-            return False, "Server phản hồi lỗi"
-        except Exception as e:
-            return False, str(e)
-
-    @staticmethod
-    def _send_auth_request(endpoint: str, payload: dict):
-        url = f"{BASE_URL}/auth/{endpoint}"
-        try:
-            response = requests.post(url, json=payload, timeout=TIMEOUT_SECONDS)
-            
-            # Thử parse JSON từ response
+def login_api(username, password):
+    # Lấy Base_URL gốc từ APIClient
+    base_url = str(APIClient.Base_URL).rstrip('/') if APIClient.Base_URL else "http://127.0.0.1:8000"
+    
+    # Khớp đúng prefix /auth của Backend FastAPI
+    url = f"{base_url}/auth/login"
+    payload = {"username": username, "password": password}
+    
+    try:
+        response = requests.post(url, json=payload, timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            return True, data.get("message", "Đăng nhập thành công!"), 200
+        else:
             try:
-                data = response.json()
+                error_detail = response.json().get("detail", "Đăng nhập thất bại!")
             except Exception:
-                return False, f"Server trả về lỗi ({response.status_code})"
+                error_detail = "Tài khoản hoặc mật khẩu không chính xác!"
+            return False, error_detail, response.status_code
+    except requests.exceptions.ConnectionError:
+        return False, "Không thể kết nối đến máy chủ Backend!", 500
+    except Exception as e:
+        return False, f"Lỗi: {str(e)}", 500
 
-            if response.status_code in [200, 201]:
-                return True, data.get("message", "Thành công!")
-            
-            error_detail = data.get("detail", "Thao tác thất bại!")
-            return False, error_detail
 
-        except requests.exceptions.Timeout:
-            return False, "Lỗi: Yêu cầu API đã hết thời gian chờ"
-        except requests.exceptions.RequestException as e:
-            return False, f"Lỗi kết nối API: {str(e)}"
-        except Exception as e:
-            return False, f"Lỗi không xác định: {str(e)}"
-
-    @staticmethod
-    def register(username: str, email: str, password: str):
-        payload = {
-            "username": username,
-            "email": email,
-            "password": password
-        }
-        return AuthAPI._send_auth_request("register", payload)
-
-    @staticmethod
-    def login(username: str, password: str):
-        payload = {
-            "username": username,
-            "password": password
-        }
-        return AuthAPI._send_auth_request("login", payload)
+def register_api(username, email, password):
+    # Lấy Base_URL gốc từ APIClient
+    base_url = str(APIClient.Base_URL).rstrip('/') if APIClient.Base_URL else "http://127.0.0.1:8000"
+    
+    # Khớp đúng prefix /auth/register của Backend
+    url = f"{base_url}/auth/register"
+    payload = {
+        "username": username,
+        "email": email,
+        "password": password
+    }
+    
+    try:
+        response = requests.post(url, json=payload, timeout=5)
+        if response.status_code in (200, 201):
+            data = response.json()
+            return True, data.get("message", "Đăng ký thành công!"), response.status_code
+        else:
+            try:
+                error_detail = response.json().get("detail", "Đăng ký thất bại!")
+            except Exception:
+                error_detail = "Không thể đăng ký tài khoản!"
+            return False, error_detail, response.status_code
+    except requests.exceptions.ConnectionError:
+        return False, "Không thể kết nối đến máy chủ Backend!", 500
+    except Exception as e:
+        return False, f"Lỗi: {str(e)}", 500
