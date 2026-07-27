@@ -26,14 +26,14 @@ def get_database():
 
             # kiểm tra kết nối bằng cách ping 
             _client.admin.command('ping')
-            print("Kết nối thành công")
+            print("Ket noi database thanh cong")
         except ConnectionFailure as cf:
-            print(f"Lỗi kết nối database: {cf}") 
+            print(f"Loi ket noi database: {cf}") 
             # nếu lỗi cần phải reset lại cái _client để tránh lỗi biến kết nối sau  nay
             _client=None
             raise cf
         except Exception as ex:
-            print(f"Loi  cau hinh database {ex}")
+            print(f"Loi cau hinh database: {ex}")
             _client=None
             raise ex
     return _client[DB_NAME]
