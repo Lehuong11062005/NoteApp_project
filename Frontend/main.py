@@ -1,48 +1,67 @@
-# Frontend/main.py
+import sys
+from pathlib import Path
 import tkinter as tk
-from tkinter import messagebox
-from services.api_client import APIClient
-from views.add_note_view import AddNoteWindow  # Import giao diện thêm ghi chú
+from tkinter import ttk
 
-def open_add_note(window):
-    """Hàm mở cửa sổ thêm ghi chú mới"""
-    add_window = AddNoteWindow(window)
-    add_window.grab_set()  # Giữ tập trung vào cửa sổ thêm ghi chú
+# Tự động thêm đường dẫn module Frontend vào sys.path
+sys.path.append(str(Path(__file__).resolve().parent))
 
-def launch_app():
-    # 1. Kiểm tra kết nối tới Backend
-    is_alive, data = APIClient.check_server()
-    
-    if not is_alive:
-        root = tk.Tk()
-        root.withdraw()
-        messagebox.showerror("Lỗi Kết Nối", data)
-        root.destroy()
-        return
+from services.auth_api import AuthAPI
+from controllers.auth_controller import AuthController
+from views.register import RegisterView
 
-    # 2. Khởi tạo màn hình chính của Ứng dụng
-    window = tk.Tk()
-    window.title("Ứng dụng Ghi chú Cá nhân")
-    window.geometry("400x200")
 
-    # Hiển thị trạng thái kết nối
-    lbl_status = tk.Label(window, text=f"✅ {data}", fg="green", font=("Arial", 10, "bold"))
-    lbl_status.pack(pady=10)
+class MainApp(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("Hệ thống Xác thực - NoteApp")
+        self.geometry("380x280")
+        self.resizable(False, False)
 
-    # Nút bấm để test chức năng Thêm Ghi Chú
-    btn_add = tk.Button(
-        window, 
-        text="+ Thêm Ghi Chú Mới", 
-        bg="#0288D1", 
-        fg="white", 
-        font=("Arial", 11, "bold"),
-        padx=10, 
-        pady=5,
-        command=lambda: open_add_note(window)
-    )
-    btn_add.pack(pady=20)
-    
-    window.mainloop()
+        # 1. Kiểm tra trạng thái Backend
+        self._check_backend_status()
+
+        # 2. Xây dựng giao diện Auth
+        self._build_ui()
+
+    def _check_backend_status(self):
+        is_alive, data = AuthAPI.check_server()
+        if is_alive:
+            msg = data.get("message", "Server đang hoạt động") if isinstance(data, dict) else str(data)
+            status_text = f"✅ {msg}"
+            status_color = "#27AE60"
+        else:
+            status_text = f"❌ Lỗi kết nối Backend: {data}"
+            status_color = "#C0392B"
+
+        lbl_status = tk.Label(self, text=status_text, fg=status_color, font=("Arial", 9, "italic"))
+        lbl_status.pack(pady=(15, 5))
+
+    def _build_ui(self):
+        frame = tk.Frame(self)
+        frame.pack(expand=True, fill="both", padx=40, pady=10)
+
+        title = tk.Label(frame, text="TÀI KHOẢN", font=("Arial", 14, "bold"), fg="#2C3E50")
+        title.pack(pady=(10, 20))
+
+        # Nút Đăng ký
+        btn_register = ttk.Button(frame, text="Đăng ký tài khoản mới", command=self.open_register_window)
+        btn_register.pack(fill="x", ipady=6, pady=6)
+
+        # Nút Đăng nhập
+        btn_login = ttk.Button(frame, text="Đăng nhập", command=self.open_login_window)
+        btn_login.pack(fill="x", ipady=6, pady=6)
+
+    def open_register_window(self):
+        reg_view = RegisterView(self)
+        controller = AuthController(reg_view)
+        reg_view.controller = controller
+
+    def open_login_window(self):
+        # Mở view Đăng nhập khi cần
+        pass
+
 
 if __name__ == "__main__":
-    launch_app()
+    app = MainApp()
+    app.mainloop()

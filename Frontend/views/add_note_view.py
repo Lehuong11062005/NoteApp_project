@@ -1,8 +1,7 @@
 # frontend/views/add_note_view.py
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
-from services.note_api import NoteAPI
-
+from Frontend.services.note_api import NoteAPI
 class AddNoteWindow(tk.Toplevel):
     def __init__(self, parent):
         super().__init__(parent)
