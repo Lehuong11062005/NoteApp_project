@@ -20,7 +20,7 @@ class MainView(tk.Tk):
         username = self.profile_data.get("username", "Người dùng")
         
         # Header chào mừng
-        header_frame = tk.Frame(self, bg="#0288D1", padding=10)
+        header_frame = tk.Frame(self, bg="#0288D1")
         header_frame.pack(fill="x")
         
         tk.Label(
@@ -29,7 +29,7 @@ class MainView(tk.Tk):
             font=("Arial", 14, "bold"),
             bg="#0288D1",
             fg="white"
-        ).pack(anchor="w", padx=10, pady=5)
+        ).pack(anchor="w", padx=15, pady=8)
 
         # Thông tin user (Profile)
         frame_profile = tk.LabelFrame(self, text="Thông tin tài khoản (Profile)", padx=15, pady=10)
