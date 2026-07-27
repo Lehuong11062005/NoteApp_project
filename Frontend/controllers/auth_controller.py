@@ -1,5 +1,5 @@
-from Frontend.services.api_client import login_api
 from Frontend.utils.messagebox import show_success, show_error
+from Frontend.services.auth_api import login_api
 
 class AuthController:
     def __init__(self, view):
@@ -17,17 +17,13 @@ class AuthController:
 
         if is_success:
             show_success("Thành công", message)
-            self.view.destroy() 
+            self.view.destroy()
         else:
             display_msg = message
-            
             if isinstance(message, list):
                 error_msgs = [err.get("msg", "Lỗi dữ liệu") for err in message if isinstance(err, dict)]
                 display_msg = "\n".join(error_msgs) if error_msgs else "Dữ liệu không hợp lệ."
             elif isinstance(message, dict):
-                display_msg = message.get("detail", "Đăng nhập thất bại.")
-
-            if status_code == 401 or status_code == 422:
-                show_error("Thông báo", display_msg)
-            else:
-                show_error("Lỗi đăng nhập", display_msg)
+                display_msg = message.get("detail", "Lỗi không xác định")
+            
+            show_error("Thất bại", display_msg)

@@ -1,27 +1,24 @@
 import requests
-import os
-from dotenv import load_dotenv
-load_dotenv()
-BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000")
+from Frontend.services.api_client import APIClient
 
 def login_api(username, password):
-    url = f"{BASE_URL}/auth/login"
+    # Sử dụng đúng biến Base_URL từ class APIClient gốc
+    base_url = str(APIClient.Base_URL).rstrip('/') if APIClient.Base_URL else "http://127.0.0.1:8000"
+    url = f"{base_url}/api/auth/login"
     payload = {"username": username, "password": password}
     
     try:
         response = requests.post(url, json=payload, timeout=5)
         if response.status_code == 200:
             data = response.json()
-            return True, data.get("message", "Đăng nhập thành công!")
-        elif response.status_code == 401:
-            return False, "Sai tài khoản hoặc mật khẩu!"
+            return True, data.get("message", "Đăng nhập thành công!"), 200
         else:
             try:
-                error_detail = response.json().get("detail", "Lỗi hệ thống")
-            except:
-                error_detail = f"Lỗi hệ thống ({response.status_code})"
-            return False, error_detail
+                error_detail = response.json().get("detail", "Đăng nhập thất bại!")
+            except Exception:
+                error_detail = "Tài khoản hoặc mật khẩu không chính xác!"
+            return False, error_detail, response.status_code
     except requests.exceptions.ConnectionError:
-        return False, "Không thể kết nối đến máy chủ Backend!"
-    except requests.exceptions.Timeout:
-        return False, "Kết nối tới máy chủ quá thời gian!"
+        return False, "Không thể kết nối đến máy chủ Backend!", 500
+    except Exception as e:
+        return False, f"Lỗi: {str(e)}", 500
