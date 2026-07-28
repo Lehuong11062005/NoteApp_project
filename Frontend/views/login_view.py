@@ -1,39 +1,34 @@
-import sys
-import os
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 import tkinter as tk
-from tkinter import ttk
-from Frontend.controllers.auth_controller import AuthController
+from tkinter import messagebox
+from controllers.auth_controller import AuthController
+from views.register_view import RegisterWindow
 
-class LoginView(tk.Toplevel):
-    def __init__(self, parent):   # <-- 1. Thêm parent ở đây
-        super().__init__(parent)  # <-- 2. Truyền parent vào super()
-        self.resizable(False, False)
-        self.title("Đăng nhập - NoteApp")
-        self.geometry("350x220")
-        
-        self.controller = AuthController(self)
-        self._setup_ui()
+class LoginWindow(tk.Tk):
+    def __init__(self, on_success_callback):
+        super().__init__()
+        self.title("Đăng nhập")
+        self.geometry("380x350")
+        self.on_success_callback = on_success_callback
+        self.auth_controller = AuthController()
 
-    def _setup_ui(self):
-        tk.Label(self, text="ĐĂNG NHẬP", font=("Arial", 14, "bold")).pack(pady=15)
+        tk.Label(self, text="ĐĂNG NHẬP", font=("Arial", 16, "bold"), fg="#2196F3").pack(pady=25)
 
-        frame = tk.Frame(self)
-        frame.pack(padx=20, fill="x")
+        tk.Label(self, text="Tài khoản:").pack(anchor="w", padx=40)
+        self.entry_user = tk.Entry(self, width=32, font=("Arial", 11))
+        self.entry_user.pack(pady=5, padx=40)
 
-        tk.Label(frame, text="Tài khoản:").grid(row=0, column=0, sticky="w", pady=5)
-        self.entry_username = ttk.Entry(frame, width=25)
-        self.entry_username.grid(row=0, column=1, pady=5, padx=5)
+        tk.Label(self, text="Mật khẩu:").pack(anchor="w", padx=40)
+        self.entry_pass = tk.Entry(self, width=32, font=("Arial", 11), show="*")
+        self.entry_pass.pack(pady=5, padx=40)
 
-        tk.Label(frame, text="Mật khẩu:").grid(row=1, column=0, sticky="w", pady=5)
-        self.entry_password = ttk.Entry(frame, width=25, show="*")
-        self.entry_password.grid(row=1, column=1, pady=5, padx=5)
+        tk.Button(self, text="Đăng nhập", bg="#2196F3", fg="white", font=("Arial", 11, "bold"), width=18, command=self.handle_login).pack(pady=20)
+        tk.Button(self, text="Chưa có tài khoản? Đăng ký", fg="blue", relief="flat", command=lambda: RegisterWindow(self)).pack()
 
-        ttk.Button(self, text="Đăng nhập", command=self.controller.handle_login).pack(pady=20)
-        self.bind('<Return>', lambda e: self.controller.handle_login())
-
-if __name__ == "__main__":
-    app = LoginView()
-    app.mainloop()
+    def handle_login(self):
+        success, result = self.auth_controller.login(self.entry_user.get().strip(), self.entry_pass.get().strip())
+        if success:
+            messagebox.showinfo("Thành công", f"Xin chào, {result.fullname}!")
+            self.destroy()
+            self.on_success_callback(result) # Truyền user sang Main App
+        else:
+            messagebox.showerror("Lỗi", result)
