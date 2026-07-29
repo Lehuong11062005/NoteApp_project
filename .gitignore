@@ -40,3 +40,10 @@ Thumbs.db
 *.sqlite
 *.suo
 *.user
+
+# ==========================================
+# 6. File nội bộ (Không push lên remote)
+# ==========================================
+RULE.MD
+task.md
+CauTruc
