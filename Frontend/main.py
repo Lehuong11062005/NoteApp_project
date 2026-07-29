@@ -6,7 +6,11 @@ from views.main_view import MainAppWindow
 
 def start_main_app(user):
     # Khởi chạy màn hình chính với thông tin user vừa đăng nhập
-    app = MainAppWindow(user)
+    def on_logout():
+        app.destroy()
+        launch()  # Mở lại màn hình Login
+
+    app = MainAppWindow(user, on_logout_callback=on_logout)
     app.mainloop()
 
 def launch():

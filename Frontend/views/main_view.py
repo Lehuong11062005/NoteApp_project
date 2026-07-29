@@ -1,14 +1,17 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from controllers.note_controller import NoteController
+from controllers.auth_controller import AuthController
 from views.add_note_view import AddNoteWindow
 
 class MainAppWindow(tk.Tk):
-    def __init__(self, user):
+    def __init__(self, user, on_logout_callback):
         super().__init__()
         self.title("Smart Note - Quản lý Ghi chú")
         self.geometry("700x450")
         self.note_controller = NoteController()
+        self.auth_controller = AuthController()
+        self.on_logout_callback = on_logout_callback
 
         # Thanh tiêu đề (Header)
         tk.Label(self, text=f"👤 Xin chào: {user.fullname}", fg="gray", font=("Arial", 10, "italic")).pack(anchor="w", padx=15, pady=5)
@@ -40,9 +43,15 @@ class MainAppWindow(tk.Tk):
         frame_btn.pack(fill="x", padx=15, pady=15)
         tk.Button(frame_btn, text="+ Thêm Ghi Chú", bg="#0288D1", fg="white", font=("Arial", 10, "bold"), command=self.open_add_note).pack(side="left")
         tk.Button(frame_btn, text="🔄 Tải lại", command=self.load_data).pack(side="left", padx=10)
+        tk.Button(frame_btn, text="🚪 Đăng xuất", bg="#D32F2F", fg="white", font=("Arial", 10, "bold"), command=self.handle_logout).pack(side="right")
 
         # Khởi chạy tải dữ liệu
         self.load_data()
+
+    def handle_logout(self):
+        if messagebox.askyesno("Xác nhận", "Bạn có chắc chắn muốn đăng xuất không?"):
+            self.auth_controller.logout()
+            self.on_logout_callback()
 
     def load_data(self):
         for row in self.tree.get_children():

@@ -8,6 +8,21 @@ class APIClient:
     load_dotenv()
     BASE_URL=os.getenv("BASE_URL")
     TIMEOUT = 5
+    TOKEN = None
+
+    @staticmethod
+    def set_token(token):
+        APIClient.TOKEN = token
+
+    @staticmethod
+    def clear_token():
+        APIClient.TOKEN = None
+
+    @staticmethod
+    def get_auth_headers():
+        if APIClient.TOKEN:
+            return {"Authorization": f"Bearer {APIClient.TOKEN}"}
+        return {}
 
     @staticmethod
     def check_server():

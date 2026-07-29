@@ -8,8 +8,22 @@ class AuthAPI:
         try:
             res = requests.post(url, json={"username": username, "password": password}, timeout=APIClient.TIMEOUT)
             if res.status_code == 200:
-                return True, res.json()
+                data = res.json()
+                if "token" in data:
+                    APIClient.set_token(data["token"])
+                return True, data
             return False, res.json().get("detail", "Sai tài khoản hoặc mật khẩu")
+        except Exception as e:
+            return False, str(e)
+
+    @staticmethod
+    def get_profile():
+        url = f"{APIClient.BASE_URL}/api/auth/profile"
+        try:
+            res = requests.get(url, headers=APIClient.get_auth_headers(), timeout=APIClient.TIMEOUT)
+            if res.status_code == 200:
+                return True, res.json()
+            return False, res.json().get("detail", "Không thể lấy thông tin người dùng")
         except Exception as e:
             return False, str(e)
 

@@ -1,4 +1,5 @@
 from services.auth_api import AuthAPI
+from services.api_client import APIClient
 from models.user import User
 
 class AuthController:
@@ -16,3 +17,7 @@ class AuthController:
         if not fullname or not email or not username or not password:
             return False, "Vui lòng điền tất cả các trường!"
         return AuthAPI.register(username, password, fullname, email)
+
+    def logout(self):
+        APIClient.clear_token()
+        return True
