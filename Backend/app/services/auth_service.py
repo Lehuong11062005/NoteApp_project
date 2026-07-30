@@ -1,71 +1,42 @@
 from fastapi import HTTPException, status
-from app.schemas.auth_schema import LoginRequest, TokenResponse, UserProfileResponse, RegisterRequest, RegisterResponse
-from app.repositories import user_repository
-from app.utils.password import verify_password, get_password_hash
-from app.middleware.jwt_auth import create_access_token
-from app.models.user import create_user_document
+from app.repositories.user_repository import UserRepository
+from app.schemas.auth_schema import UserRegisterSchema, UserLoginSchema
+from app.utils.password import hash_password, verify_password
+from datetime import datetime
+from typing import Dict, Any
 
-def authenticate_user(db, request: LoginRequest) -> TokenResponse:
-    user = user_repository.get_user_by_username(db, request.username)
-    
-    if not user or not verify_password(request.password, user.get("password")):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Tài khoản hoặc mật khẩu không chính xác!",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    user_id = str(user.get("_id"))
-    access_token = create_access_token(data={"sub": user.get("username"), "user_id": user_id})
-    
-    return TokenResponse(access_token=access_token, token_type="bearer")
+class AuthService:
+    def __init__(self):
+        self.user_repo = UserRepository()
 
-def get_profile(db, current_user: dict) -> UserProfileResponse:
-    """Lấy thông tin cá nhân user đang đăng nhập dựa vào token."""
-    user = user_repository.get_user_by_id(db, current_user["user_id"])
-    
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Không tìm thấy thông tin người dùng!"
-        )
-    
-    created_at = user.get("created_at")
-    if created_at and hasattr(created_at, "isoformat"):
-        created_at = created_at.isoformat()
-    elif created_at:
-        created_at = str(created_at)
-    
-    return UserProfileResponse(
-        user_id=str(user.get("_id")),
-        username=user.get("username", ""),
-        email=user.get("email"),
-        full_name=user.get("full_name"),
-        avatar_url=user.get("avatar_url"),
-        created_at=created_at
-    )
+    def register(self, user_data: UserRegisterSchema) -> Dict[str, Any]:
+        if self.user_repo.find_by_username(user_data.username):
+            raise HTTPException(status_code=400, detail="Tên đăng nhập đã tồn tại!")
+        
+        if self.user_repo.find_by_email(user_data.email):
+            raise HTTPException(status_code=400, detail="Email này đã được sử dụng!")
 
-def register_user(db, request: RegisterRequest) -> RegisterResponse:
-    """Xử lý đăng kí tài khoản mới."""
-    existing_user = user_repository.get_user_by_username(db, request.username)
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"Tên đăng nhập '{request.username}' đã tồn tại!"
-        )
+        hashed_pwd = hash_password(user_data.password)
+        new_user = {
+            "username": user_data.username,
+            "password": hashed_pwd,
+            "fullname": user_data.fullname,
+            "email": user_data.email,
+            "created_at": datetime.now()
+        }
 
-    hashed_pw = get_password_hash(request.password)
+        user_id = self.user_repo.create_user(new_user)
+        return {"message": "Đăng ký thành công!", "user_id": user_id}
 
-    user_doc = create_user_document(
-        username=request.username,
-        hashed_password=hashed_pw,
-        email=request.email,
-        full_name=request.full_name
-    )
-
-    user_repository.create_user(db, user_doc)
-
-    return RegisterResponse(
-        message="Đăng kí tài khoản thành công!",
-        username=request.username
-    )
+    def login(self, user_data: UserLoginSchema) -> Dict[str, Any]:
+        user = self.user_repo.find_by_username(user_data.username)
+        if not user or not verify_password(user_data.password, user["password"]):
+            raise HTTPException(status_code=401, detail="Sai tên đăng nhập hoặc mật khẩu!")
+        
+        return {
+            "message": "Đăng nhập thành công!",
+            "user": {
+                "username": user["username"],
+                "fullname": user["fullname"]
+            }
+        }

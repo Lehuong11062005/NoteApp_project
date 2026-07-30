@@ -9,33 +9,31 @@ from app.routes.upload import router as upload_router
 from contextlib import asynccontextmanager
 
 load_dotenv()
-host_url = os.getenv("host", "127.0.0.1")
+host_url = os.getenv("host")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     get_database()
-    print("[OK] MongoDB connected.")
-    
+    print("Đã kết nối MongoDB.")
     yield
-    
+    # Code chạy khi ứng dụng DỪNG
     close_database()
 
-app = FastAPI(title="NoteApp API - Group 6", lifespan=lifespan)
+app = FastAPI(title="The Project of Group 6", lifespan=lifespan)
 
-# Auth routers (no upload for this branch)
+# Nhúng router vào FastAPI app
 app.include_router(note_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
 app.include_router(upload_router, prefix="/api")
 
-# Mount static files for upload
+# Mount static files cho upload ảnh local (fallback khi không có ImgBB)
 uploads_dir = os.path.join(os.path.dirname(__file__), "uploads")
 os.makedirs(uploads_dir, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
-
 @app.get("/")
 def root():
-    return {"message": "Server FastAPI hoat dong on dinh"}
+    return {"messsage": "Server hoat dong on dinh"}
 
 if __name__ == "__main__":
     import uvicorn

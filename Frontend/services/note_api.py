@@ -1,17 +1,25 @@
 import requests
-import os
-from dotenv import  load_dotenv
+from services.api_client import APIClient
 from typing import Optional
 
-load_dotenv()
 
-Base_URL=os.getenv("BASE_URL")
-TIMEOUT_SECONDS=5
 
 class NoteAPI:
     @staticmethod
-    def create_note(title:str, content:str,category:str,priority:str, reminder_time:[str]=None, image_url:Optional[str]=None):
-        url=f"{Base_URL}/api/notes"
+    def get_all():
+        url = f"{APIClient.BASE_URL}/api/notes"
+        try:
+            res = requests.get(url, timeout=APIClient.TIMEOUT)
+            if res.status_code == 200:
+                return True, res.json()
+            return False, "Lỗi lấy danh sách ghi chú"
+        except Exception as e:
+            return False, str(e)
+
+        
+    @staticmethod
+    def create_note(title:str, content:str,category:str,priority:str, reminder_time:Optional[str]=None, image_url:Optional[str]=None):
+        url=f"{APIClient.BASE_URL}/api/notes"
 
         payload={
             "title": title,
@@ -23,7 +31,7 @@ class NoteAPI:
         }
     
         try:
-            respon= requests.post(url, json=payload,timeout=TIMEOUT_SECONDS)
+            respon= requests.post(url, json=payload,timeout=APIClient.TIMEOUT)
             if respon.status_code== 201:
                 return True,"Thêm Ghi Chú Thành Công"
             error_detail=respon.json().get("detail","Lỗi tạo ghi chú")
@@ -34,4 +42,3 @@ class NoteAPI:
             return False,"Lỗi: Yêu cầu API đã hết thời gian chờ"
         except Exception as e:
             return False,f"Lỗi không xác định: {str(e)}"
-    

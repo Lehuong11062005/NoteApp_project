@@ -1,86 +1,61 @@
 import tkinter as tk
-from tkinter import ttk
-from Frontend.views.add_note_view import AddNoteWindow
+from tkinter import ttk, messagebox
+from controllers.note_controller import NoteController
+from views.add_note_view import AddNoteWindow
 
-class MainView(tk.Tk):
-    """Màn hình chính Main App sau khi Đăng nhập thành công."""
-
-    def __init__(self, controller, profile_data: dict):
+class MainAppWindow(tk.Tk):
+    def __init__(self, user):
         super().__init__()
-        self.controller = controller
-        self.profile_data = profile_data or {}
+        self.title("Smart Note - Quản lý Ghi chú")
+        self.geometry("700x450")
+        self.note_controller = NoteController()
 
-        self.title("NoteApp – Ứng dụng Ghi chú Cá nhân")
-        self.geometry("500x380")
-        self.resizable(False, False)
-
-        self._setup_ui()
-
-    def _setup_ui(self):
-        username = self.profile_data.get("username", "Người dùng")
+        # Thanh tiêu đề (Header)
+        tk.Label(self, text=f"👤 Xin chào: {user.fullname}", fg="gray", font=("Arial", 10, "italic")).pack(anchor="w", padx=15, pady=5)
         
-        # Header chào mừng
-        header_frame = tk.Frame(self, bg="#0288D1")
-        header_frame.pack(fill="x")
+        # Bảng danh sách ghi chú
+        frame_list = tk.Frame(self)
+        frame_list.pack(fill="both", expand=True, padx=15, pady=5)
+
+        columns = ("title", "category", "priority", "create_at")
+        self.tree = ttk.Treeview(frame_list, columns=columns, show="headings", height=12)
+        self.tree.heading("title", text="Tiêu đề")
+        self.tree.heading("category", text="Chủ đề")
+        self.tree.heading("priority", text="Mức độ")
+        self.tree.heading("create_at", text="Ngày tạo")
         
-        tk.Label(
-            header_frame,
-            text=f"👋 Chào mừng, {username}!",
-            font=("Arial", 14, "bold"),
-            bg="#0288D1",
-            fg="white"
-        ).pack(anchor="w", padx=15, pady=8)
+        self.tree.column("title", width=300)
+        self.tree.column("category", width=100, anchor="center")
+        self.tree.column("priority", width=100, anchor="center")
+        self.tree.column("create_at", width=100, anchor="center")
+        
+        self.tree.pack(side="left", fill="both", expand=True)
 
-        # Thông tin user (Profile)
-        frame_profile = tk.LabelFrame(self, text="Thông tin tài khoản (Profile)", padx=15, pady=10)
-        frame_profile.pack(padx=20, pady=15, fill="x")
+        scrollbar = ttk.Scrollbar(frame_list, orient="vertical", command=self.tree.yview)
+        self.tree.configure(yscroll=scrollbar.set)
+        scrollbar.pack(side="right", fill="y")
 
-        fields = [
-            ("User ID:", self.profile_data.get("user_id", "N/A")),
-            ("Tên đăng nhập:", self.profile_data.get("username", "N/A")),
-            ("Email:", self.profile_data.get("email") or "Chưa cập nhật"),
-            ("Họ và tên:", self.profile_data.get("full_name") or "Chưa cập nhật"),
-        ]
+        # Nút bấm chức năng
+        frame_btn = tk.Frame(self)
+        frame_btn.pack(fill="x", padx=15, pady=15)
+        tk.Button(frame_btn, text="+ Thêm Ghi Chú", bg="#0288D1", fg="white", font=("Arial", 10, "bold"), command=self.open_add_note).pack(side="left")
+        tk.Button(frame_btn, text="🔄 Tải lại", command=self.load_data).pack(side="left", padx=10)
 
-        for i, (label_text, value_text) in enumerate(fields):
-            tk.Label(frame_profile, text=label_text, anchor="w", font=("Arial", 9, "bold"), width=16).grid(
-                row=i, column=0, sticky="w", pady=3
-            )
-            tk.Label(frame_profile, text=value_text, anchor="w", fg="#333333", font=("Arial", 9)).grid(
-                row=i, column=1, sticky="w", pady=3
-            )
+        # Khởi chạy tải dữ liệu
+        self.load_data()
 
-        # Action Buttons Frame
-        btn_frame = tk.Frame(self)
-        btn_frame.pack(pady=15)
-
-        # Nút Mở cửa sổ Thêm Ghi Chú
-        btn_add_note = tk.Button(
-            btn_frame,
-            text="+ Thêm Ghi Chú Mới",
-            bg="#2E7D32",
-            fg="white",
-            font=("Arial", 10, "bold"),
-            padx=12,
-            pady=6,
-            command=self.open_add_note
-        )
-        btn_add_note.pack(side="left", padx=10)
-
-        # Nút Đăng Xuất (Xóa token, quay lại Login)
-        btn_logout = tk.Button(
-            btn_frame,
-            text="🚪 Đăng xuất",
-            bg="#D32F2F",
-            fg="white",
-            font=("Arial", 10, "bold"),
-            padx=12,
-            pady=6,
-            command=self.controller.handle_logout
-        )
-        btn_logout.pack(side="left", padx=10)
+    def load_data(self):
+        for row in self.tree.get_children():
+            self.tree.delete(row)
+            
+        success, data = self.note_controller.get_notes()
+        if success:
+            for note in data:
+                self.tree.insert("", "end", values=(note.title, note.category, note.priority, note.create_at))
+        else:
+            messagebox.showerror("Lỗi", data)
 
     def open_add_note(self):
-        """Mở cửa sổ Thêm ghi chú mới"""
         add_window = AddNoteWindow(self)
-        add_window.grab_set()
+        self.wait_window(add_window)
+        self.load_data() # Tự động load lại sau khi thêm xong
