@@ -1,7 +1,8 @@
 pymongo
 python-dotenv
-bcrypt
-python-jose[cryptography]
 fastapi
 uvicorn[standard]
-email-validator
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+httpx

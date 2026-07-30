@@ -1,34 +1,41 @@
-from fastapi import FastAPI
-from app.config.database import get_database, close_database
 import os
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from app.config.database import get_database, close_database
 from dotenv import load_dotenv
-
 from app.routes.notes import router as note_router
-from app.routes.auth import router as auth_router 
-
+from app.routes.auth import router as auth_router
+from app.routes.upload import router as upload_router
 from contextlib import asynccontextmanager
 
 load_dotenv()
-host_url = os.getenv("host")
+host_url = os.getenv("host", "127.0.0.1")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Code chạy khi ứng dụng BẮT ĐẦU
     get_database()
-    print("Đã kết nối MongoDB.")
+    print("[OK] MongoDB connected.")
+    
     yield
-    # Code chạy khi ứng dụng DỪNG
+    
     close_database()
 
-app = FastAPI(title="The Project of Group 6", lifespan=lifespan)
+app = FastAPI(title="NoteApp API - Group 6", lifespan=lifespan)
 
-# 2. Nhúng cả 2 router vào FastAPI app
+# Auth routers (no upload for this branch)
 app.include_router(note_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
+app.include_router(upload_router, prefix="/api")
+
+# Mount static files for upload
+uploads_dir = os.path.join(os.path.dirname(__file__), "uploads")
+os.makedirs(uploads_dir, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
+
 
 @app.get("/")
 def root():
-    return {"messsage": "Server hoat dong on dinh"}
+    return {"message": "Server FastAPI hoat dong on dinh"}
 
 if __name__ == "__main__":
     import uvicorn
