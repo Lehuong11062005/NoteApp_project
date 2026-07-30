@@ -1,9 +1,11 @@
 import os
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from app.config.database import get_database, close_database
 from dotenv import load_dotenv
 from app.routes.notes import router as note_router
 from app.routes.auth import router as auth_router
+from app.routes.upload import router as upload_router
 from contextlib import asynccontextmanager
 
 load_dotenv()
@@ -23,6 +25,12 @@ app = FastAPI(title="NoteApp API - Group 6", lifespan=lifespan)
 # Auth routers (no upload for this branch)
 app.include_router(note_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
+app.include_router(upload_router, prefix="/api")
+
+# Mount static files for upload
+uploads_dir = os.path.join(os.path.dirname(__file__), "uploads")
+os.makedirs(uploads_dir, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
 
 @app.get("/")

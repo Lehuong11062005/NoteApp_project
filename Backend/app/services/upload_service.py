@@ -144,3 +144,43 @@ async def upload_note_image(file: UploadFile, db, note_id: str, user_id: str) ->
     )
     note_repository.add_image_to_note(db, note_id, user_id, image_entry)
     return image_info
+
+IMAGES_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads", "images")
+
+async def save_image(file: UploadFile) -> str:
+    """Lưu file ảnh trực tiếp vào thư mục app/uploads/images/ và trả về URL static dạng http://127.0.0.1:8000/uploads/images/<filename>"""
+    os.makedirs(IMAGES_DIR, exist_ok=True)
+    
+    content_type = file.content_type or ""
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if not ext:
+        ext = ".png"
+
+    if content_type not in ALLOWED_CONTENT_TYPES:
+        content_type = EXTENSION_TO_MIME.get(ext, content_type)
+
+    if content_type not in ALLOWED_CONTENT_TYPES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Định dạng file '{file.filename}' không được hỗ trợ. Chỉ hỗ trợ: jpg, png, gif, webp"
+        )
+
+    file_bytes = await file.read()
+    if len(file_bytes) > MAX_FILE_SIZE_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="File quá lớn. Tối đa 10 MB."
+        )
+
+    filename = f"{uuid.uuid4().hex}{ext}"
+    file_path = os.path.join(IMAGES_DIR, filename)
+
+    with open(file_path, "wb") as f:
+        f.write(file_bytes)
+
+    # Lấy BASE_URL từ environment hoặc default http://127.0.0.1:8000
+    host_base = os.getenv("BASE_URL", "http://127.0.0.1:8000")
+    if "localhost" in host_base:
+        host_base = host_base.replace("localhost", "127.0.0.1")
+        
+    return f"{host_base}/uploads/images/{filename}"

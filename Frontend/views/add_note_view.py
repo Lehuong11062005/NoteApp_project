@@ -5,12 +5,13 @@ import requests
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from PIL import Image, ImageTk
-from Frontend.services.api_client import upload_image_api
+from Frontend.controllers.note_controller import NoteController
 from Frontend.services.note_api import NoteAPI
 
 class AddNoteWindow(tk.Toplevel):
     def __init__(self, parent):
         super().__init__(parent)
+        self.controller = NoteController(self)
         self.title("Thêm Ghi Chú Mới")
         self.geometry("520x680")
         
@@ -45,7 +46,7 @@ class AddNoteWindow(tk.Toplevel):
         
         self.entry_image = tk.Entry(frame_img, width=40)
         self.entry_image.pack(side="left", padx=(0,5))
-        btn_browse = tk.Button(frame_img, text="📁 Chọn ảnh từ máy", bg="#0288D1", fg="white", font=("Arial", 9, "bold"), command=self.browse_image)
+        btn_browse = tk.Button(frame_img, text="📎 Chọn ảnh", bg="#0288D1", fg="white", font=("Arial", 9, "bold"), command=self.browse_image)
         btn_browse.pack(side="left")
 
         # Widget hiển thị Thumbnail ảnh thu nhỏ bằng Pillow
@@ -63,17 +64,17 @@ class AddNoteWindow(tk.Toplevel):
 
     def browse_image(self):
         """1. Dùng filedialog chọn ảnh từ máy tính.
-           2. Gọi API POST /upload để tải ảnh lên server.
-           3. Dùng Pillow load và hiển thị thumbnail ảnh thu nhỏ.
+           2. Gọi controller để tải ảnh lên server.
+           3. Dùng Pillow load và hiển thị thumbnail ảnh thu nhỏ 100x100px.
         """
         file_path = filedialog.askopenfilename(
-            filetypes=[("Image files", "*.jpg *.jpeg *.png *.gif *.webp"), ("All files", "*.*")]
+            filetypes=[("Image files", "*.png *.jpg *.jpeg"), ("All files", "*.*")]
         )
         if not file_path:
             return
 
-        # Gọi API Upload
-        is_success, result = upload_image_api(file_path)
+        # Gọi API Upload qua controller
+        is_success, result = self.controller.upload_image(file_path)
         if not is_success:
             messagebox.showerror("Lỗi Upload", f"Không thể upload ảnh: {result}")
             return
@@ -83,7 +84,7 @@ class AddNoteWindow(tk.Toplevel):
         self.entry_image.insert(0, image_url)
         messagebox.showinfo("Thành công", f"Đã upload ảnh thành công!\nURL: {image_url}")
 
-        # Dùng Pillow hiển thị thumbnail thu nhỏ
+        # Dùng Pillow hiển thị thumbnail thu nhỏ 100x100px
         self.show_thumbnail(file_path, image_url)
 
     def show_thumbnail(self, local_path: str, image_url: str):
@@ -98,10 +99,10 @@ class AddNoteWindow(tk.Toplevel):
                     pil_image = Image.open(io.BytesIO(res.content))
 
             if pil_image:
-                # Resize ảnh thành thumbnail 120x120 pixels bằng Pillow
-                pil_image.thumbnail((120, 120))
+                # Resize ảnh thành thumbnail 100x100 pixels bằng Pillow
+                pil_image.thumbnail((100, 100))
                 self.thumbnail_img = ImageTk.PhotoImage(pil_image)
-                self.lbl_thumbnail.config(image=self.thumbnail_img, text="", width=120, height=120)
+                self.lbl_thumbnail.config(image=self.thumbnail_img, text="", width=100, height=100)
             else:
                 self.lbl_thumbnail.config(text="[ Lỗi tải ảnh ]")
         except Exception as e:
