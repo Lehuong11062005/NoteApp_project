@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
-from controllers.auth_controller import AuthController
-from views.register_view import RegisterWindow
+from Frontend.controllers.auth_controller import AuthController
+from Frontend.views.register_view import RegisterWindow
 
 class LoginWindow(tk.Tk):
     def __init__(self, on_success_callback):

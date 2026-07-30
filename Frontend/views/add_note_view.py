@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from controllers.note_controller import NoteController
 
 class AddNoteWindow(tk.Toplevel):
     def __init__(self, parent):
@@ -8,7 +7,7 @@ class AddNoteWindow(tk.Toplevel):
         self.title("Thêm Ghi Chú Mới")
         self.geometry("450x450")
         self.grab_set()
-        self.note_controller = NoteController()
+        self.note_controller = parent.note_controller
         
         tk.Label(self, text="Tiêu đề:").pack(anchor="w", padx=10, pady=(10,0))
         self.entry_title = tk.Entry(self, width=50)

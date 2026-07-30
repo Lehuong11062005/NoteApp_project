@@ -1,5 +1,5 @@
 import requests
-from services.api_client import APIClient
+from Frontend.services.api_client import APIClient
 
 class AuthAPI:
     @staticmethod

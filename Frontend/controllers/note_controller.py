@@ -1,13 +1,15 @@
-from services.note_api import NoteAPI
-from models.note import Note
+from Frontend.services.note_api import NoteAPI
+from Frontend.models.note import Note
 
 class NoteController:
+    def __init__(self, username: str = None):
+        self.username = username
+
     def get_notes(self):
-        success, data = NoteAPI.get_all()
+        success, data = NoteAPI.get_all(self.username)
         if success:
             notes = []
             for item in data:
-                # Chuyển đổi JSON thành Object Note
                 create_at = item.get("create_at", "")[:10] if item.get("create_at") else ""
                 note = Note(
                     id=item.get("_id"), title=item.get("title", "No Title"),
@@ -21,4 +23,8 @@ class NoteController:
     def create_note(self, title, content, category, priority, reminder_time=None, image_url=None):
         if not title or not content:
             return False, "Tiêu đề và nội dung không được để trống!"
-        return NoteAPI.create(title, content, category, priority, reminder_time, image_url)
+        return NoteAPI.create_note(
+            title, content, category, priority,
+            reminder_time, image_url,
+            user_id=self.username
+        )

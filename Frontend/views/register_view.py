@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
-from controllers.auth_controller import AuthController
+from Frontend.controllers.auth_controller import AuthController
 
 class RegisterWindow(tk.Toplevel):
     def __init__(self, parent):

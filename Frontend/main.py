@@ -1,8 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox
-from services.api_client import APIClient
-from views.login_view import LoginWindow
-from views.main_view import MainAppWindow
+from Frontend.services.api_client import APIClient
+from Frontend.views.login_view import LoginWindow
+from Frontend.views.main_view import MainAppWindow
 
 def start_main_app(user):
     # Khởi chạy màn hình chính với thông tin user vừa đăng nhập
