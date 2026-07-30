@@ -42,3 +42,29 @@ class NoteAPI:
             return False,"Lỗi: Yêu cầu API đã hết thời gian chờ"
         except Exception as e:
             return False,f"Lỗi không xác định: {str(e)}"
+
+    @staticmethod
+    def update_note(note_id:str, title:str, content:str,category:str,priority:str, reminder_time:Optional[str]=None, image_url:Optional[str]=None):
+        url=f"{APIClient.BASE_URL}/api/notes/{note_id}"
+
+        payload={
+            "title": title,
+            "content":content,
+            "category":category,
+            "priority":priority,
+            "reminder_time": reminder_time,
+            "image_url": image_url
+        }
+
+        try:
+            respon= requests.put(url, json=payload,timeout=APIClient.TIMEOUT)
+            if respon.status_code== 200:
+                return True,"Cập Nhật Ghi Chú Thành Công"
+            error_detail=respon.json().get("detail","Lỗi cập nhật ghi chú")
+            return False,error_detail
+        except requests.exceptions.RequestException as e:
+            return False,f"Lỗi kết nối API: {str(e)}"
+        except requests.exceptions.Timeout:
+            return False,"Lỗi: Yêu cầu API đã hết thời gian chờ"
+        except Exception as e:
+            return False,f"Lỗi không xác định: {str(e)}"

@@ -21,4 +21,9 @@ class NoteController:
     def create_note(self, title, content, category, priority, reminder_time=None, image_url=None):
         if not title or not content:
             return False, "Tiêu đề và nội dung không được để trống!"
-        return NoteAPI.create(title, content, category, priority, reminder_time, image_url)
+        return NoteAPI.create_note(title, content, category, priority, reminder_time, image_url)
+
+    def update_note(self, note_id, title, content, category, priority, reminder_time=None, image_url=None):
+        if not title or not content:
+            return False, "Tiêu đề và nội dung không được để trống!"
+        return NoteAPI.update_note(note_id, title, content, category, priority, reminder_time, image_url)
