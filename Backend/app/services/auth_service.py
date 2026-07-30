@@ -1,5 +1,5 @@
 from fastapi import HTTPException, status
-from Backend.app.middleware.jwt_auth import ALGORITHM, SECRET_KEY
+from app.middleware.jwt_auth import ALGORITHM, SECRET_KEY
 from app.repositories.user_repository import UserRepository
 from app.schemas.auth_schema import UserRegisterSchema, UserLoginSchema
 from app.utils.password import hash_password, verify_password
