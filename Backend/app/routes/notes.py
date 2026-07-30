@@ -1,13 +1,16 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from app.schemas.note_schema import NoteCreateSchema
 from app.services.note_service import NoteService
+
+from app.middleware.jwt_auth import verify_token
 
 router =APIRouter(prefix="/notes", tags=["Notes"])
 note_service= NoteService()
 
 @router.post("/",status_code=status.HTTP_201_CREATED)
-def create_new_note(note:NoteCreateSchema):
+def create_new_note(note:NoteCreateSchema, current_user: dict = Depends(verify_token)):
     try:
+        username = current_user.get("sub")
         result=note_service.create_note(note_data=note)
         return result
     except Exception as e:
