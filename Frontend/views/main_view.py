@@ -1,14 +1,21 @@
+import sys
+from pathlib import Path
 import tkinter as tk
 from tkinter import ttk, messagebox
-from controllers.note_controller import NoteController
-from views.add_note_view import AddNoteWindow
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from Frontend.controllers.note_controller import NoteController
+from Frontend.views.add_note_view import AddNoteWindow
 
 class MainAppWindow(tk.Tk):
     def __init__(self, user):
         super().__init__()
         self.title("Smart Note - Quản lý Ghi chú")
         self.geometry("700x450")
-        self.note_controller = NoteController()
+        self.note_controller = NoteController(user.username)
 
         # Thanh tiêu đề (Header)
         tk.Label(self, text=f"👤 Xin chào: {user.fullname}", fg="gray", font=("Arial", 10, "italic")).pack(anchor="w", padx=15, pady=5)

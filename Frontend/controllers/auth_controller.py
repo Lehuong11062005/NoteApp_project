@@ -1,5 +1,5 @@
-from services.auth_api import AuthAPI
-from models.user import User
+from Frontend.services.auth_api import AuthAPI
+from Frontend.models.user import User
 
 class AuthController:
     def login(self, username, password):

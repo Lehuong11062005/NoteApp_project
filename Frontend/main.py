@@ -1,8 +1,15 @@
+import sys
+from pathlib import Path
 import tkinter as tk
 from tkinter import messagebox
-from services.api_client import APIClient
-from views.login_view import LoginWindow
-from views.main_view import MainAppWindow
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from Frontend.services.api_client import APIClient
+from Frontend.views.login_view import LoginWindow
+from Frontend.views.main_view import MainAppWindow
 
 def start_main_app(user):
     # Khởi chạy màn hình chính với thông tin user vừa đăng nhập

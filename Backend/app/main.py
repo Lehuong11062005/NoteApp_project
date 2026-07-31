@@ -4,7 +4,9 @@ import os
 from dotenv import load_dotenv
 
 from app.routes.notes import router as note_router
-from app.routes.auth import router as auth_router 
+from app.routes.auth import router as auth_router
+from app.routes.reminders import router as reminder_router
+from app.routes.categories import router as category_router
 
 from contextlib import asynccontextmanager
 
@@ -22,9 +24,11 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="The Project of Group 6", lifespan=lifespan)
 
-# 2. Nhúng cả 2 router vào FastAPI app
+# 2. Nhúng các router vào FastAPI app
 app.include_router(note_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
+app.include_router(reminder_router, prefix="/api")
+app.include_router(category_router, prefix="/api")
 
 @app.get("/")
 def root():
