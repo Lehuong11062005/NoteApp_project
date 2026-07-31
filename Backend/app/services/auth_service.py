@@ -5,8 +5,9 @@ from app.schemas.auth_schema import UserRegisterSchema, UserLoginSchema
 from app.utils.password import hash_password, verify_password
 from datetime import datetime, timedelta
 from typing import Dict, Any
-import os
 import jwt
+import os
+
 
 class AuthService:
     def __init__(self):
