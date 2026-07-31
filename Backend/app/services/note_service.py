@@ -6,7 +6,7 @@ class NoteService:
     def __init__(self):
         self.note_repo=NoteRepository()
 
-    def create_note(self, note_data: NoteCreateSchema, user_id:str = "gress"):
+    def create_note(self, note_data: NoteCreateSchema, user_id:str):
         data =note_data.dict()
 
         data["create_at"]=datetime.now()
