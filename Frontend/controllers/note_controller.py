@@ -34,3 +34,18 @@ class NoteController:
             image_url,
             user_id=self.username,
         )
+
+    def update_note(self, note_id, title, content, category, priority, reminder_time=None, image_url=None):
+        if not note_id:
+            return False, "Không tìm thấy ghi chú để cập nhật"
+        if not title or not content:
+            return False, "Tiêu đề và nội dung không được để trống!"
+        return NoteAPI.update_note(
+            note_id,
+            title,
+            content,
+            category,
+            priority,
+            reminder_time,
+            image_url,
+        )
