@@ -9,3 +9,7 @@ class UserRegisterSchema(BaseModel):
 class UserLoginSchema(BaseModel):
     username: str
     password: str
+class UserGetInforSchema(BaseModel):
+    username: str  
+    fullname: str 
+    email: EmailStr

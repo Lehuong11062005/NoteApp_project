@@ -1,7 +1,14 @@
+import sys
+from pathlib import Path
 import tkinter as tk
 from tkinter import messagebox
-from controllers.auth_controller import AuthController
-from views.register_view import RegisterWindow
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from Frontend.controllers.auth_controller import AuthController
+from Frontend.views.register_view import RegisterWindow
 
 class LoginWindow(tk.Tk):
     def __init__(self, on_success_callback):

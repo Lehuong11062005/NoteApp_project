@@ -1,6 +1,13 @@
+import sys
+from pathlib import Path
 import tkinter as tk
 from tkinter import ttk, messagebox
-from controllers.note_controller import NoteController
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from Frontend.controllers.note_controller import NoteController
 
 class AddNoteWindow(tk.Toplevel):
     def __init__(self, parent, note_data=None):
@@ -13,8 +20,10 @@ class AddNoteWindow(tk.Toplevel):
         self.title("Cập nhật Ghi Chú" if self.edit_mode else "Thêm Ghi Chú Mới")
         self.geometry("450x450")
         self.grab_set()
-        self.note_controller = NoteController()
-        
+
+        username = getattr(getattr(parent, "note_controller", None), "username", None)
+        self.note_controller = NoteController(username)
+
         tk.Label(self, text="Tiêu đề:").pack(anchor="w", padx=10, pady=(10,0))
         self.entry_title = tk.Entry(self, width=50)
         self.entry_title.pack(padx=10, pady=5)

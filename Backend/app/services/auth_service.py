@@ -1,9 +1,13 @@
 from fastapi import HTTPException, status
+from app.middleware.jwt_auth import ALGORITHM, SECRET_KEY
 from app.repositories.user_repository import UserRepository
 from app.schemas.auth_schema import UserRegisterSchema, UserLoginSchema
 from app.utils.password import hash_password, verify_password
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, Any
+import jwt
+import os
+
 
 class AuthService:
     def __init__(self):
@@ -33,8 +37,18 @@ class AuthService:
         if not user or not verify_password(user_data.password, user["password"]):
             raise HTTPException(status_code=401, detail="Sai tên đăng nhập hoặc mật khẩu!")
         
+        payload = {
+        "sub": user["username"],
+        "exp": datetime.utcnow() + timedelta(hours=24),
+    }
+
+        # 2. Sinh chuỗi JWT Token từ khóa bí mật "321cba"
+        token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+            
         return {
             "message": "Đăng nhập thành công!",
+            "access_token": token,
+            "token_type": "bearer",
             "user": {
                 "username": user["username"],
                 "fullname": user["fullname"]
