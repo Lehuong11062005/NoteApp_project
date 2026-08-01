@@ -4,3 +4,4 @@ bcrypt
 fastapi
 uvicorn
 PyJWT
+email-validator

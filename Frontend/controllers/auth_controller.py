@@ -25,3 +25,17 @@ class AuthController:
         if not fullname or not email or not username or not password:
             return False, "Vui lòng điền tất cả các trường!"
         return AuthAPI.register(username, password, fullname, email)
+
+    def logout(self):
+        APIClient.clear_token()
+
+    def get_profile(self):
+        success, data = AuthAPI.get_profile()
+        if success:
+            user = User(
+                username=data.get("username", ""),
+                fullname=data.get("fullname", ""),
+                email=data.get("email", "")
+            )
+            return True, user
+        return False, data
