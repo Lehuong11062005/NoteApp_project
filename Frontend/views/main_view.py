@@ -8,17 +8,29 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from Frontend.controllers.note_controller import NoteController
+from Frontend.controllers.auth_controller import AuthController
 from Frontend.views.add_note_view import AddNoteWindow
+from Frontend.views.profile_view import ProfileWindow
+
 
 class MainAppWindow(tk.Tk):
-    def __init__(self, user):
+    def __init__(self, user, on_logout_callback=None):
         super().__init__()
         self.title("Smart Note - Quản lý Ghi chú")
         self.geometry("700x450")
-        self.note_controller = NoteController(user.username)
+        
+        # Kết hợp khởi tạo controller và xử lý user_id/username từ nhánh HEAD
+        self.note_controller = NoteController(user.username if hasattr(user, "username") else None)
+        self.auth_controller = AuthController()
+        self.on_logout_callback = on_logout_callback
 
         # Thanh tiêu đề (Header)
-        tk.Label(self, text=f"👤 Xin chào: {user.fullname}", fg="gray", font=("Arial", 10, "italic")).pack(anchor="w", padx=15, pady=5)
+        frame_header = tk.Frame(self)
+        frame_header.pack(fill="x", padx=15, pady=5)
+        
+        tk.Label(frame_header, text=f"👤 Xin chào: {user.fullname}", fg="gray", font=("Arial", 10, "italic")).pack(side="left")
+        tk.Button(frame_header, text="🚪 Đăng xuất", fg="red", font=("Arial", 9, "bold"), command=self.handle_logout).pack(side="right", padx=5)
+        tk.Button(frame_header, text="👤 Hồ sơ", fg="#0288D1", font=("Arial", 9, "bold"), command=self.open_profile).pack(side="right")
         
         # Bảng danh sách ghi chú
         frame_list = tk.Frame(self)
@@ -66,3 +78,13 @@ class MainAppWindow(tk.Tk):
         add_window = AddNoteWindow(self)
         self.wait_window(add_window)
         self.load_data() # Tự động load lại sau khi thêm xong
+
+    def open_profile(self):
+        ProfileWindow(self)
+
+    def handle_logout(self):
+        if messagebox.askyesno("Đăng xuất", "Bạn có chắc chắn muốn đăng xuất?"):
+            self.auth_controller.logout()
+            self.destroy()
+            if self.on_logout_callback:
+                self.on_logout_callback()
