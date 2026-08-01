@@ -1,6 +1,8 @@
-from services.auth_api import AuthAPI
-from models.user import User
-from services.api_client import APIClient
+from Frontend.services.auth_api import AuthAPI
+from Frontend.models.user import User
+from Frontend.services.api_client import APIClient
+
+
 class AuthController:
     def login(self, username, password):
         if not username or not password:

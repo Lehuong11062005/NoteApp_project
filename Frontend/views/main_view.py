@@ -1,16 +1,26 @@
+import sys
+from pathlib import Path
 import tkinter as tk
 from tkinter import ttk, messagebox
-from controllers.note_controller import NoteController
-from controllers.auth_controller import AuthController
-from views.add_note_view import AddNoteWindow
-from views.profile_view import ProfileWindow
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from Frontend.controllers.note_controller import NoteController
+from Frontend.controllers.auth_controller import AuthController
+from Frontend.views.add_note_view import AddNoteWindow
+from Frontend.views.profile_view import ProfileWindow
+
 
 class MainAppWindow(tk.Tk):
     def __init__(self, user, on_logout_callback=None):
         super().__init__()
         self.title("Smart Note - Quản lý Ghi chú")
         self.geometry("700x450")
-        self.note_controller = NoteController()
+        
+        # Kết hợp khởi tạo controller và xử lý user_id/username từ nhánh HEAD
+        self.note_controller = NoteController(user.username if hasattr(user, "username") else None)
         self.auth_controller = AuthController()
         self.on_logout_callback = on_logout_callback
 

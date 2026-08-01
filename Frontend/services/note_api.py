@@ -1,12 +1,14 @@
-from services.api_client import APIClient
+from Frontend.services.api_client import APIClient
 from typing import Optional
+
 
 class NoteAPI:
     @staticmethod
-    def get_all():
+    def get_all(user_id: Optional[str] = None):
         try:
-            # Dùng luôn APIClient.get để tự động gắn Token và Header
-            res = APIClient.get("/api/notes/")
+            # Dùng APIClient.get để tự động gắn Token và Header, hỗ trợ truyền params nếu cần
+            params = {"user_id": user_id} if user_id else {}
+            res = APIClient.get("/api/notes/", params=params)
             if res.status_code == 200:
                 return True, res.json()
             
@@ -16,24 +18,32 @@ class NoteAPI:
             return False, str(e)
 
     @staticmethod
-    def create_note(title: str, content: str, category: str, priority: str, reminder_time: Optional[str] = None, image_url: Optional[str] = None):
+    def create_note(
+        title: str,
+        content: str,
+        category: str,
+        priority: str,
+        reminder_time: Optional[str] = None,
+        image_url: Optional[str] = None,
+        user_id: Optional[str] = None,
+    ):
         payload = {
             "title": title,
             "content": content,
             "category": category,
             "priority": priority,
             "reminder_time": reminder_time,
-            "image_url": image_url
+            "image_url": image_url,
+            "user_id": user_id,
         }
-    
+
         try:
-            # Dùng luôn APIClient.post để tự động gắn Token và Header
-            respon = APIClient.post("/api/notes/", data=payload)
-            if respon.status_code == 201:
+            # Dùng APIClient.post để tự động gắn Token và Header
+            response = APIClient.post("/api/notes/", data=payload)
+            if response.status_code == 201:
                 return True, "Thêm Ghi Chú Thành Công"
-                
-            error_detail = respon.json().get("detail", "Lỗi tạo ghi chú")
-            return False, error_detail
             
+            error_detail = response.json().get("detail", "Lỗi tạo ghi chú")
+            return False, error_detail
         except Exception as e:
             return False, f"Lỗi kết nối API: {str(e)}"
