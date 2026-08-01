@@ -31,6 +31,15 @@ class MainAppWindow(tk.Tk):
         tk.Button(frame_header, text="🚪 Đăng xuất", fg="red", font=("Arial", 9, "bold"), command=self.handle_logout).pack(side="right", padx=5)
         tk.Button(frame_header, text="👤 Hồ sơ", fg="#0288D1", font=("Arial", 9, "bold"), command=self.open_profile).pack(side="right")
         
+        search_frame = tk.Frame(self)
+        search_frame.pack(fill="x", padx=15, pady=(5, 0))
+        tk.Label(search_frame, text="🔎 Tìm kiếm:").pack(side="left")
+        self.search_var = tk.StringVar()
+        self.entry_search = tk.Entry(search_frame, textvariable=self.search_var, width=40)
+        self.entry_search.pack(side="left", padx=(5, 10))
+        self.entry_search.bind("<Return>", self.perform_search)
+        tk.Button(search_frame, text="Tìm", command=self.perform_search).pack(side="left")
+
         frame_list = tk.Frame(self)
         frame_list.pack(fill="both", expand=True, padx=15, pady=5)
 
@@ -84,26 +93,53 @@ class MainAppWindow(tk.Tk):
         # Khởi chạy tải dữ liệu
         self.selected_note_id = None
         self.notes_by_id = {}
+        self.current_search_keyword = ""
         self.load_data()
 
-    def load_data(self):
+    def render_notes(self, notes):
         for row in self.tree.get_children():
             self.tree.delete(row)
         self.notes_by_id.clear()
         self.hide_update_form()
-            
+
+        for note in notes:
+            self.notes_by_id[note.id] = note
+            self.tree.insert("", "end", iid=note.id, values=(note.title, note.category, note.priority, note.create_at))
+
+    def load_data(self):
+        self.current_search_keyword = ""
+        self.search_var.set("")
         success, data = self.note_controller.get_notes()
         if success:
-            for note in data:
-                self.notes_by_id[note.id] = note
-                self.tree.insert("", "end", iid=note.id, values=(note.title, note.category, note.priority, note.create_at))
+            self.render_notes(data)
         else:
+            self.render_notes([])
+            messagebox.showerror("Lỗi", data)
+
+    def refresh_current_view(self):
+        if self.current_search_keyword:
+            self.perform_search()
+        else:
+            self.load_data()
+
+    def perform_search(self, event=None):
+        keyword = self.search_var.get().strip()
+        self.current_search_keyword = keyword
+        if not keyword:
+            self.load_data()
+            return
+
+        success, data = self.note_controller.search_notes(keyword)
+        if success:
+            self.render_notes(data)
+        else:
+            self.render_notes([])
             messagebox.showerror("Lỗi", data)
 
     def open_add_note(self):
         add_window = AddNoteWindow(self)
         self.wait_window(add_window)
-        self.load_data() 
+        self.refresh_current_view() 
     def open_profile(self):
         ProfileWindow(self)
 
@@ -150,7 +186,7 @@ class MainAppWindow(tk.Tk):
         )
         if success:
             messagebox.showinfo("Thành công", msg)
-            self.load_data()
+            self.refresh_current_view()
             self.clear_update_form()
         else:
             messagebox.showerror("Lỗi", msg)

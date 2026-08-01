@@ -34,6 +34,22 @@ def create_new_note(note: NoteCreateSchema, current_user: dict = Depends(verify_
         raise HTTPException(status_code=400, detail=str(e))
 
 
+@router.get("/search", status_code=status.HTTP_200_OK)
+def search_notes(keyword: str, user_id: str = None, current_user: dict = Depends(verify_token)):
+    try:
+        if current_user and current_user.get("sub"):
+            target_user_id = current_user.get("sub")
+        else:
+            target_user_id = user_id
+
+        if not target_user_id:
+            raise HTTPException(status_code=400, detail="user_id is required")
+
+        return note_service.search_notes_by_user(user_id=target_user_id, keyword=keyword)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 @router.put("/{note_id}", status_code=status.HTTP_200_OK)
 def update_note(note_id: str, note: NoteCreateSchema):
     try:

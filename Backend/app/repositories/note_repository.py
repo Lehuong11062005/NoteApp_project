@@ -43,6 +43,28 @@ class NoteRepository:
             notes.append(item)
         return notes
 
+    def search_notes_by_user(self, user_id: str, keyword: str) -> list:
+        query = {"user_id": user_id}
+        normalized_keyword = (keyword or "").strip()
+        if normalized_keyword:
+            query["$or"] = [
+                {"title": {"$regex": normalized_keyword, "$options": "i"}},
+                {"content": {"$regex": normalized_keyword, "$options": "i"}},
+                {"category": {"$regex": normalized_keyword, "$options": "i"}},
+                {"priority": {"$regex": normalized_keyword, "$options": "i"}},
+            ]
+
+        cursor = self.collection.find(query)
+        notes = []
+        for item in cursor:
+            item["_id"] = str(item["_id"])
+            if item.get("create_at") is not None:
+                item["create_at"] = item["create_at"].isoformat()
+            if item.get("update_at") is not None:
+                item["update_at"] = item["update_at"].isoformat()
+            notes.append(item)
+        return notes
+
     def update_note(self, note_id: str, update_data: dict):
         if "update_at" not in update_data:
             update_data["update_at"] = datetime.now()
