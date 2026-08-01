@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 from app.routes.notes import router as note_router
 from app.routes.auth import router as auth_router 
-
+from app.routes.user import router as user_router
 from contextlib import asynccontextmanager
 
 load_dotenv()
@@ -25,6 +25,7 @@ app = FastAPI(title="The Project of Group 6", lifespan=lifespan)
 # 2. Nhúng cả 2 router vào FastAPI app
 app.include_router(note_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
+app.include_router(user_router, prefix="/api")
 
 @app.get("/")
 def root():

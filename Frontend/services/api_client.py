@@ -39,7 +39,6 @@ class APIClient:
     @classmethod
     def get_headers(cls):
         """Tự động tạo Header chứa Bearer Token"""
-        print(f"DEBUG - Token hiện tại trong APIClient: {cls._token}") 
         headers = {"Content-Type": "application/json"}
         if cls._token:
             headers["Authorization"] = f"Bearer {cls._token}"
