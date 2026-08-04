@@ -1,13 +1,25 @@
+import sys
+from pathlib import Path
 import tkinter as tk
 from tkinter import messagebox
-from services.api_client import APIClient
-from views.login_view import LoginWindow
-from views.main_view import MainAppWindow
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from Frontend.services.api_client import APIClient
+from Frontend.views.login_view import LoginWindow
+from Frontend.views.main_view import MainAppWindow
 
 def start_main_app(user):
     # Khởi chạy màn hình chính với thông tin user vừa đăng nhập
-    app = MainAppWindow(user)
+    app = MainAppWindow(user, on_logout_callback=show_login)
     app.mainloop()
+
+def show_login():
+    # Mở màn hình Đăng nhập
+    login_app = LoginWindow(on_success_callback=start_main_app)
+    login_app.mainloop()
 
 def launch():
     # 1. Kiểm tra kết nối tới Backend trước khi mở App
@@ -20,9 +32,7 @@ def launch():
         return
 
     # 2. Nếu Backend OK, mở màn hình Đăng nhập
-    # Truyền hàm start_main_app vào để nó tự mở Ghi chú sau khi Login đúng
-    login_app = LoginWindow(on_success_callback=start_main_app)
-    login_app.mainloop()
+    show_login()
 
 if __name__ == "__main__":
     launch()
