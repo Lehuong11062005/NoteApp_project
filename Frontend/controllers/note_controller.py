@@ -31,6 +31,16 @@ class NoteController:
             return True, notes
         return False, data or "Không thể tải danh sách ghi chú"
 
+    def get_statistics(self) -> Tuple[bool, Union[List[Tuple[str, int]], str]]:
+        """Lấy thống kê số lượng ghi chú theo danh mục."""
+        success, data = NoteAPI.get_statistics(self.username)
+        if success and isinstance(data, list):
+            return True, [
+                (item.get("category") or "Chung", item.get("count", 0))
+                for item in data
+            ]
+        return False, data or "Không thể lấy dữ liệu thống kê"
+
     def search_notes(self, keyword: str) -> Tuple[bool, Union[List[Note], str]]:
         """Tìm kiếm ghi chú theo từ khóa."""
         success, data = NoteAPI.search(keyword=keyword, user_id=self.username)

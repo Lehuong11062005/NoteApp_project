@@ -2,6 +2,8 @@ import sys
 from pathlib import Path
 import tkinter as tk
 from tkinter import ttk, messagebox
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
@@ -17,7 +19,7 @@ class MainAppWindow(tk.Tk):
     def __init__(self, user, on_logout_callback=None):
         super().__init__()
         self.title("Smart Note - Quản lý Ghi chú")
-        self.geometry("820x580")
+        self.geometry("820x620")
         self.configure(bg="#F5F7FB")
         self.resizable(False, False)
 
@@ -103,24 +105,24 @@ class MainAppWindow(tk.Tk):
         # Search Frame
         search_frame = tk.Frame(self, bg="#F5F7FB")
         search_frame.pack(fill="x", padx=15, pady=(5, 5))
-        
+
         tk.Label(
-            search_frame, 
-            text="🔎 Tìm kiếm:", 
-            bg="#F5F7FB", 
-            font=("Arial", 10, "bold")
+            search_frame,
+            text="🔎 Tìm kiếm:",
+            bg="#F5F7FB",
+            font=("Arial", 10, "bold"),
         ).pack(side="left")
-        
+
         self.search_var = tk.StringVar()
         self.entry_search = tk.Entry(
-            search_frame, 
-            textvariable=self.search_var, 
+            search_frame,
+            textvariable=self.search_var,
             font=("Arial", 10),
-            width=35
+            width=35,
         )
         self.entry_search.pack(side="left", padx=(5, 10), ipady=3)
         self.entry_search.bind("<Return>", self.perform_search)
-        
+
         tk.Button(
             search_frame,
             text="Tìm",
@@ -130,21 +132,21 @@ class MainAppWindow(tk.Tk):
             relief="flat",
             padx=10,
             cursor="hand2",
-            command=self.perform_search
+            command=self.perform_search,
         ).pack(side="left")
 
-        subtitle = tk.Label(
-            self,
-            text="Chọn ghi chú để xem chi tiết hoặc chỉnh sửa. Nháy đúp vào dòng để sửa nhanh.",
-            fg="#555555",
-            bg="#F5F7FB",
-            font=("Arial", 9),
-        )
-        subtitle.pack(anchor="w", padx=18, pady=(0, 5))
+        # Notebook chứa Tab
+        notebook = ttk.Notebook(self)
+        notebook.pack(fill="both", expand=True, padx=15, pady=5)
 
-        # Content Frame
-        content_frame = tk.Frame(self, bg="#F5F7FB")
-        content_frame.pack(fill="both", expand=True, padx=15, pady=5)
+        notes_tab = ttk.Frame(notebook)
+        stats_tab = ttk.Frame(notebook)
+        notebook.add(notes_tab, text="Danh sách ghi chú")
+        notebook.add(stats_tab, text="Thống kê")
+
+        # Content Frame trong Tab Danh sách ghi chú
+        content_frame = tk.Frame(notes_tab, bg="#F5F7FB")
+        content_frame.pack(fill="both", expand=True, padx=5, pady=5)
 
         # Bảng danh sách ghi chú
         frame_list = tk.Frame(content_frame, bg="#F5F7FB")
@@ -152,14 +154,14 @@ class MainAppWindow(tk.Tk):
 
         columns = ("title", "category", "priority", "create_at")
         self.tree = ttk.Treeview(
-            frame_list, columns=columns, show="headings", height=12
+            frame_list, columns=columns, show="headings", height=10
         )
         self.tree.heading("title", text="Tiêu đề")
         self.tree.heading("category", text="Chủ đề")
         self.tree.heading("priority", text="Mức độ")
         self.tree.heading("create_at", text="Ngày tạo")
 
-        self.tree.column("title", width=250)
+        self.tree.column("title", width=230)
         self.tree.column("category", width=90, anchor="center")
         self.tree.column("priority", width=80, anchor="center")
         self.tree.column("create_at", width=100, anchor="center")
@@ -176,10 +178,10 @@ class MainAppWindow(tk.Tk):
 
         # Khung xem chi tiết
         detail_frame = ttk.LabelFrame(
-            content_frame, text="Thông tin ghi chú", padding=(12, 12)
+            content_frame, text="Thông tin ghi chú", padding=(10, 10)
         )
-        detail_frame.pack(side="right", fill="y", padx=(15, 0), pady=0)
-        detail_frame.configure(width=240)
+        detail_frame.pack(side="right", fill="y", padx=(10, 0), pady=0)
+        detail_frame.configure(width=230)
 
         self.note_title_label = tk.Label(
             detail_frame,
@@ -218,7 +220,7 @@ class MainAppWindow(tk.Tk):
             text="Nội dung:",
             anchor="nw",
             justify="left",
-            wraplength=200,
+            wraplength=190,
             font=("Arial", 10),
             fg="#333333",
         )
@@ -227,15 +229,15 @@ class MainAppWindow(tk.Tk):
             detail_frame,
             text="Chọn ghi chú để xem trước hoặc sửa.",
             fg="#777777",
-            wraplength=220,
+            wraplength=200,
             justify="left",
             font=("Arial", 9),
         )
         self.info_label.pack(fill="x")
 
-        # Nút bấm chức năng bên dưới
-        frame_btn = tk.Frame(self, bg="#F5F7FB")
-        frame_btn.pack(fill="x", padx=15, pady=15)
+        # Nút bấm chức năng bên dưới tab ghi chú
+        frame_btn = tk.Frame(notes_tab, bg="#F5F7FB")
+        frame_btn.pack(fill="x", padx=5, pady=10)
 
         tk.Button(
             frame_btn,
@@ -246,7 +248,7 @@ class MainAppWindow(tk.Tk):
             command=self.open_add_note,
             relief="flat",
             padx=12,
-            pady=8,
+            pady=6,
             cursor="hand2",
         ).pack(side="left")
 
@@ -259,7 +261,7 @@ class MainAppWindow(tk.Tk):
             command=self.open_selected_note,
             relief="flat",
             padx=12,
-            pady=8,
+            pady=6,
             cursor="hand2",
         ).pack(side="left", padx=10)
 
@@ -272,7 +274,7 @@ class MainAppWindow(tk.Tk):
             command=self.delete_selected_note,
             relief="flat",
             padx=12,
-            pady=8,
+            pady=6,
             cursor="hand2",
         ).pack(side="left")
 
@@ -285,9 +287,14 @@ class MainAppWindow(tk.Tk):
             command=self.load_data,
             relief="flat",
             padx=12,
-            pady=8,
+            pady=6,
             cursor="hand2",
         ).pack(side="right")
+
+        # Tab Thống kê (Biểu đồ)
+        self.stats_figure = Figure(figsize=(6, 4), dpi=100)
+        self.stats_canvas = FigureCanvasTkAgg(self.stats_figure, master=stats_tab)
+        self.stats_canvas.get_tk_widget().pack(fill="both", expand=True)
 
         # Tải dữ liệu ban đầu
         self.load_data()
@@ -329,6 +336,8 @@ class MainAppWindow(tk.Tk):
         else:
             self.render_notes([])
             messagebox.showerror("Lỗi", str(data))
+
+        self.load_statistics()
 
     def refresh_current_view(self):
         if self.current_search_keyword:
@@ -427,6 +436,44 @@ class MainAppWindow(tk.Tk):
                 self.refresh_current_view()
             else:
                 messagebox.showerror("Lỗi", msg)
+
+        self.load_statistics()
+
+    def load_statistics(self):
+        success, data = self.note_controller.get_statistics()
+        if not success:
+            return
+
+        self.stats_figure.clear()
+        axes = self.stats_figure.add_subplot(111)
+        if not data:
+            axes.text(0.5, 0.5, "Chưa có ghi chú để thống kê", ha="center", va="center")
+            axes.axis("off")
+        else:
+            categories = [item[0] for item in data]
+            counts = [item[1] for item in data]
+            color_map = {
+                "Học tập": "#1976D2",
+                "Công việc": "#F57C00",
+                "Cá nhân": "#388E3C",
+                "Chung": "#757575",
+            }
+            fallback_colors = ["#7B1FA2", "#0097A7", "#C2185B", "#AFB42B"]
+            colors = [
+                color_map.get(category, fallback_colors[index % len(fallback_colors)])
+                for index, category in enumerate(categories)
+            ]
+            axes.pie(
+                counts,
+                labels=categories,
+                colors=colors,
+                autopct="%1.1f%%",
+                startangle=90,
+            )
+            axes.set_title("Tỷ lệ ghi chú theo chủ đề")
+            axes.axis("equal")
+        self.stats_figure.tight_layout()
+        self.stats_canvas.draw()
 
     def open_add_note(self):
         add_window = AddNoteWindow(self)

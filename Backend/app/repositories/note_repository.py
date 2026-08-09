@@ -59,6 +59,23 @@ class NoteRepository:
         cursor = self.collection.find({"user_id": user_id})
         return [self._format_note(item) for item in cursor]
 
+    def get_note_counts_by_category(self, user_id: str) -> List[Dict[str, Any]]:
+        """Thống kê số lượng ghi chú theo danh mục của user."""
+        pipeline = [
+            {"$match": {"user_id": user_id}},
+            {
+                "$group": {
+                    "_id": {"$ifNull": ["$category", "Chung"]},
+                    "count": {"$sum": 1},
+                }
+            },
+            {"$sort": {"count": -1, "_id": 1}},
+        ]
+        return [
+            {"category": item["_id"], "count": item["count"]}
+            for item in self.collection.aggregate(pipeline)
+        ]
+
     def search_notes_by_user(self, user_id: str, keyword: str) -> List[Dict[str, Any]]:
         """Tìm kiếm note của user theo từ khóa."""
         query: Dict[str, Any] = {"user_id": user_id}
