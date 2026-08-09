@@ -47,6 +47,12 @@ class NoteService:
             raise ValueError("user_id là bắt buộc")
         return self.note_repo.get_notes_by_user(user_id)
 
+    def search_notes_by_user(self, user_id: str, keyword: str) -> List[Dict[str, Any]]:
+        """Tìm kiếm ghi chú của user theo từ khóa."""
+        if not user_id:
+            raise ValueError("user_id là bắt buộc")
+        return self.note_repo.search_notes_by_user(user_id, keyword)
+
     def update_note(
         self, 
         note_id: str, 

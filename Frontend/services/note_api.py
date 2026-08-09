@@ -18,6 +18,21 @@ class NoteAPI:
             return False, f"Lỗi kết nối API: {str(e)}"
 
     @staticmethod
+    def search(keyword: Optional[str] = None, user_id: Optional[str] = None):
+        try:
+            params = {"user_id": user_id} if user_id else {}
+            if keyword is not None:
+                params["keyword"] = keyword
+            res = APIClient.get("/api/notes/search", params=params)
+            if res.status_code == 200:
+                return True, res.json()
+
+            error_detail = res.json().get("detail", "Lỗi tìm kiếm ghi chú")
+            return False, error_detail
+        except Exception as e:
+            return False, str(e)
+
+    @staticmethod
     def create_note(
         title: str,
         content: str,

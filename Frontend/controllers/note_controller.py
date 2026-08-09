@@ -31,6 +31,30 @@ class NoteController:
             return True, notes
         return False, data or "Không thể tải danh sách ghi chú"
 
+    def search_notes(self, keyword: str) -> Tuple[bool, Union[List[Note], str]]:
+        """Tìm kiếm ghi chú theo từ khóa."""
+        success, data = NoteAPI.search(keyword=keyword, user_id=self.username)
+        if success:
+            notes = []
+            if isinstance(data, list):
+                for item in data:
+                    create_at = (
+                        item.get("create_at", "")[:10]
+                        if item.get("create_at")
+                        else ""
+                    )
+                    note = Note(
+                        id=item.get("_id"),
+                        title=item.get("title", "No Title"),
+                        content=item.get("content", ""),
+                        category=item.get("category", ""),
+                        priority=item.get("priority", ""),
+                        create_at=create_at,
+                    )
+                    notes.append(note)
+            return True, notes
+        return False, data or "Không thể tìm kiếm ghi chú"
+
     def create_note(
         self,
         title: str,

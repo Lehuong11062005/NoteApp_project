@@ -37,9 +37,41 @@ def get_notes(
 
 @router.get("/all", status_code=status.HTTP_200_OK)
 def get_all_notes(current_user: dict = Depends(verify_token)):
-    """Lấy tất cả ghi chú trong hệ thống (đổi route thành /all để tránh trùng với /)."""
+    """Lấy tất cả ghi chú trong hệ thống."""
     try:
         return note_service.get_all_notes()
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        )
+
+
+# --- LƯU Ý: Phải khai báo các Route tĩnh như /search TRƯỚC Route động /{note_id} ---
+@router.get("/search", status_code=status.HTTP_200_OK)
+def search_notes(
+    keyword: Optional[str] = "",
+    user_id: Optional[str] = None,
+    current_user: dict = Depends(verify_token),
+):
+    """Tìm kiếm ghi chú theo từ khóa."""
+    try:
+        target_user_id = (
+            current_user.get("sub")
+            if current_user and current_user.get("sub")
+            else user_id
+        )
+
+        if not target_user_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="user_id is required",
+            )
+
+        return note_service.search_notes_by_user(
+            user_id=target_user_id, keyword=keyword or ""
+        )
+    except HTTPException as http_ex:
+        raise http_ex
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
@@ -89,7 +121,8 @@ def update_note(
         result = note_service.update_note(note_id=note_id, note_data=note)
         if not result:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Note not found or update failed"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Note not found or update failed",
             )
         return result
     except ValueError as e:
@@ -111,7 +144,8 @@ def delete_note(note_id: str, current_user: dict = Depends(verify_token)):
         result = note_service.delete_note(note_id=note_id)
         if not result:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Note not found or delete failed"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Note not found or delete failed",
             )
         return result
     except HTTPException as http_ex:

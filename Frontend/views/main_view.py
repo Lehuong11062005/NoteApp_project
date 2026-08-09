@@ -17,7 +17,7 @@ class MainAppWindow(tk.Tk):
     def __init__(self, user, on_logout_callback=None):
         super().__init__()
         self.title("Smart Note - Quản lý Ghi chú")
-        self.geometry("820x540")
+        self.geometry("820x580")
         self.configure(bg="#F5F7FB")
         self.resizable(False, False)
 
@@ -30,6 +30,7 @@ class MainAppWindow(tk.Tk):
         self.note_map = {}
         self.selected_note_id = None
         self.edit_window_open = False
+        self.current_search_keyword = ""
 
         # Style Treeview và Button
         self.style = ttk.Style(self)
@@ -57,7 +58,7 @@ class MainAppWindow(tk.Tk):
 
         # Header Frame
         header_frame = tk.Frame(self, bg="#ffffff", bd=0, relief="flat")
-        header_frame.pack(fill="x", padx=15, pady=(15, 5))
+        header_frame.pack(fill="x", padx=15, pady=(10, 5))
 
         tk.Label(
             header_frame,
@@ -98,6 +99,39 @@ class MainAppWindow(tk.Tk):
             bg="#ffffff",
             font=("Arial", 10, "italic"),
         ).pack(side="right", padx=10)
+
+        # Search Frame
+        search_frame = tk.Frame(self, bg="#F5F7FB")
+        search_frame.pack(fill="x", padx=15, pady=(5, 5))
+        
+        tk.Label(
+            search_frame, 
+            text="🔎 Tìm kiếm:", 
+            bg="#F5F7FB", 
+            font=("Arial", 10, "bold")
+        ).pack(side="left")
+        
+        self.search_var = tk.StringVar()
+        self.entry_search = tk.Entry(
+            search_frame, 
+            textvariable=self.search_var, 
+            font=("Arial", 10),
+            width=35
+        )
+        self.entry_search.pack(side="left", padx=(5, 10), ipady=3)
+        self.entry_search.bind("<Return>", self.perform_search)
+        
+        tk.Button(
+            search_frame,
+            text="Tìm",
+            bg="#1976D2",
+            fg="white",
+            font=("Arial", 9, "bold"),
+            relief="flat",
+            padx=10,
+            cursor="hand2",
+            command=self.perform_search
+        ).pack(side="left")
 
         subtitle = tk.Label(
             self,
@@ -258,7 +292,7 @@ class MainAppWindow(tk.Tk):
         # Tải dữ liệu ban đầu
         self.load_data()
 
-    def load_data(self):
+    def render_notes(self, notes):
         for row in self.tree.get_children():
             self.tree.delete(row)
 
@@ -266,9 +300,8 @@ class MainAppWindow(tk.Tk):
         self.selected_note_id = None
         self.update_detail_panel(None)
 
-        success, data = self.note_controller.get_notes()
-        if success:
-            for index, note in enumerate(data):
+        if notes:
+            for index, note in enumerate(notes):
                 note_id = str(note.id)
                 self.note_map[note_id] = note
                 row_tag = "evenrow" if index % 2 == 0 else "oddrow"
@@ -286,7 +319,35 @@ class MainAppWindow(tk.Tk):
                 )
             self.tree.tag_configure("evenrow", background="#FFFFFF")
             self.tree.tag_configure("oddrow", background="#F3F7FF")
+
+    def load_data(self):
+        self.current_search_keyword = ""
+        self.search_var.set("")
+        success, data = self.note_controller.get_notes()
+        if success:
+            self.render_notes(data)
         else:
+            self.render_notes([])
+            messagebox.showerror("Lỗi", str(data))
+
+    def refresh_current_view(self):
+        if self.current_search_keyword:
+            self.perform_search()
+        else:
+            self.load_data()
+
+    def perform_search(self, event=None):
+        keyword = self.search_var.get().strip()
+        self.current_search_keyword = keyword
+        if not keyword:
+            self.load_data()
+            return
+
+        success, data = self.note_controller.search_notes(keyword)
+        if success:
+            self.render_notes(data)
+        else:
+            self.render_notes([])
             messagebox.showerror("Lỗi", str(data))
 
     def update_detail_panel(self, note):
@@ -345,7 +406,7 @@ class MainAppWindow(tk.Tk):
         edit_window = AddNoteWindow(self, note_data=note)
         self.wait_window(edit_window)
         self.edit_window_open = False
-        self.load_data()
+        self.refresh_current_view()
 
     def delete_selected_note(self):
         if not self.selected_note_id:
@@ -363,14 +424,14 @@ class MainAppWindow(tk.Tk):
             success, msg = self.note_controller.delete_note(self.selected_note_id)
             if success:
                 messagebox.showinfo("Thành công", msg)
-                self.load_data()
+                self.refresh_current_view()
             else:
                 messagebox.showerror("Lỗi", msg)
 
     def open_add_note(self):
         add_window = AddNoteWindow(self)
         self.wait_window(add_window)
-        self.load_data()
+        self.refresh_current_view()
 
     def open_profile(self):
         ProfileWindow(self)

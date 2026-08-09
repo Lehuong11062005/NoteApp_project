@@ -59,6 +59,21 @@ class NoteRepository:
         cursor = self.collection.find({"user_id": user_id})
         return [self._format_note(item) for item in cursor]
 
+    def search_notes_by_user(self, user_id: str, keyword: str) -> List[Dict[str, Any]]:
+        """Tìm kiếm note của user theo từ khóa."""
+        query: Dict[str, Any] = {"user_id": user_id}
+        normalized_keyword = (keyword or "").strip()
+        if normalized_keyword:
+            query["$or"] = [
+                {"title": {"$regex": normalized_keyword, "$options": "i"}},
+                {"content": {"$regex": normalized_keyword, "$options": "i"}},
+                {"category": {"$regex": normalized_keyword, "$options": "i"}},
+                {"priority": {"$regex": normalized_keyword, "$options": "i"}},
+            ]
+
+        cursor = self.collection.find(query)
+        return [self._format_note(item) for item in cursor]
+
     def update_note(self, note_id: str, update_data: dict) -> bool:
         """Cập nhật thông tin note."""
         obj_id = self._to_object_id(note_id)
