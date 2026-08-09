@@ -31,12 +31,17 @@ class NoteController:
             return True, notes
         return False, data or "Không thể tải danh sách ghi chú"
 
-    def get_statistics(self) -> Tuple[bool, Union[List[Tuple[str, int]], str]]:
-        """Lấy thống kê số lượng ghi chú theo danh mục."""
-        success, data = NoteAPI.get_statistics(self.username)
+    def get_statistics(
+        self, period: str = "day"
+    ) -> Tuple[bool, Union[List[Tuple[str, int]], str]]:
+        """Lấy thống kê số lượng ghi chú theo thời gian hoặc danh mục."""
+        success, data = NoteAPI.get_statistics(self.username, period=period)
         if success and isinstance(data, list):
             return True, [
-                (item.get("category") or "Chung", item.get("count", 0))
+                (
+                    item.get("date") or item.get("category") or "Khác",
+                    item.get("count", 0),
+                )
                 for item in data
             ]
         return False, data or "Không thể lấy dữ liệu thống kê"

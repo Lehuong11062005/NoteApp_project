@@ -47,6 +47,12 @@ class NoteService:
             raise ValueError("user_id là bắt buộc")
         return self.note_repo.get_notes_by_user(user_id)
 
+    def get_note_counts_by_date(self, user_id: str, period: str = "day") -> List[Dict[str, Any]]:
+        """Thống kê số lượng ghi chú theo mốc thời gian."""
+        if not user_id:
+            raise ValueError("user_id là bắt buộc")
+        return self.note_repo.get_note_counts_by_date(user_id, period)
+
     def get_note_counts_by_category(self, user_id: str) -> List[Dict[str, Any]]:
         """Thống kê số lượng ghi chú theo danh mục của user."""
         if not user_id:

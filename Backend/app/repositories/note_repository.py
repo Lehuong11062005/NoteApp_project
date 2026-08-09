@@ -59,6 +59,29 @@ class NoteRepository:
         cursor = self.collection.find({"user_id": user_id})
         return [self._format_note(item) for item in cursor]
 
+    def get_note_counts_by_date(self, user_id: str, period: str = "day") -> List[Dict[str, Any]]:
+        """Thống kê số lượng ghi chú theo thời gian (ngày hoặc tháng)."""
+        date_format = "%Y-%m" if period == "month" else "%Y-%m-%d"
+        pipeline = [
+            {"$match": {"user_id": user_id, "create_at": {"$exists": True}}},
+            {
+                "$group": {
+                    "_id": {
+                        "$dateToString": {
+                            "format": date_format,
+                            "date": "$create_at",
+                        }
+                    },
+                    "count": {"$sum": 1},
+                }
+            },
+            {"$sort": {"_id": 1}},
+        ]
+        return [
+            {"date": item["_id"], "count": item["count"]}
+            for item in self.collection.aggregate(pipeline)
+        ]
+
     def get_note_counts_by_category(self, user_id: str) -> List[Dict[str, Any]]:
         """Thống kê số lượng ghi chú theo danh mục của user."""
         pipeline = [

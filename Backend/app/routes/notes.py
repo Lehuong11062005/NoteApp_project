@@ -111,11 +111,13 @@ def create_new_note(
 
 
 @router.get("/statistics", status_code=status.HTTP_200_OK)
-def get_note_statistics(user_id: str):
+def get_note_statistics(user_id: str, period: str = "day"):
     if not user_id:
         raise HTTPException(status_code=400, detail="user_id is required")
+    if period not in {"day", "month"}:
+        raise HTTPException(status_code=400, detail="period must be day or month")
     try:
-        return note_service.get_note_counts_by_category(user_id=user_id)
+        return note_service.get_note_counts_by_date(user_id=user_id, period=period)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
