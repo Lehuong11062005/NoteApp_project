@@ -21,11 +21,11 @@ class NoteController:
             return True, notes
         return False, data
 
-    def get_statistics(self):
-        success, data = NoteAPI.get_statistics(self.username)
+    def get_statistics(self, period="day"):
+        success, data = NoteAPI.get_statistics(self.username, period)
         if success:
             return True, [
-                (item.get("category") or "Chung", item.get("count", 0))
+                (item.get("date", ""), item.get("count", 0))
                 for item in data
             ]
         return False, data

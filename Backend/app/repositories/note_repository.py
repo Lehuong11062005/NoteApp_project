@@ -43,19 +43,25 @@ class NoteRepository:
             notes.append(item)
         return notes
 
-    def get_note_counts_by_category(self, user_id: str) -> list:
+    def get_note_counts_by_date(self, user_id: str, period: str = "day") -> list:
+        date_format = "%Y-%m" if period == "month" else "%Y-%m-%d"
         pipeline = [
-            {"$match": {"user_id": user_id}},
+            {"$match": {"user_id": user_id, "create_at": {"$exists": True}}},
             {
                 "$group": {
-                    "_id": {"$ifNull": ["$category", "Chung"]},
+                    "_id": {
+                        "$dateToString": {
+                            "format": date_format,
+                            "date": "$create_at",
+                        }
+                    },
                     "count": {"$sum": 1},
                 }
             },
-            {"$sort": {"count": -1, "_id": 1}},
+            {"$sort": {"_id": 1}},
         ]
         return [
-            {"category": item["_id"], "count": item["count"]}
+            {"date": item["_id"], "count": item["count"]}
             for item in self.collection.aggregate(pipeline)
         ]
 

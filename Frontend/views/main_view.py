@@ -61,6 +61,19 @@ class MainAppWindow(tk.Tk):
         self.stats_figure = Figure(figsize=(6, 4), dpi=100)
         self.stats_canvas = FigureCanvasTkAgg(self.stats_figure, master=stats_tab)
         self.stats_canvas.get_tk_widget().pack(fill="both", expand=True)
+        stats_controls = tk.Frame(stats_tab)
+        stats_controls.pack(fill="x", padx=5, pady=5)
+        tk.Label(stats_controls, text="Khoảng thời gian:").pack(side="left")
+        self.period_var = tk.StringVar(value="Ngày")
+        period_selector = ttk.Combobox(
+            stats_controls,
+            textvariable=self.period_var,
+            values=["Ngày", "Tháng"],
+            state="readonly",
+            width=10,
+        )
+        period_selector.pack(side="left", padx=8)
+        period_selector.bind("<<ComboboxSelected>>", lambda event: self.load_statistics())
 
         # Khởi chạy tải dữ liệu
         self.load_data()
@@ -79,7 +92,8 @@ class MainAppWindow(tk.Tk):
         self.load_statistics()
 
     def load_statistics(self):
-        success, data = self.note_controller.get_statistics()
+        period = "month" if self.period_var.get() == "Tháng" else "day"
+        success, data = self.note_controller.get_statistics(period)
         if not success:
             messagebox.showerror("Lỗi", data)
             return
@@ -90,28 +104,14 @@ class MainAppWindow(tk.Tk):
             axes.text(0.5, 0.5, "Chưa có ghi chú để thống kê", ha="center", va="center")
             axes.axis("off")
         else:
-            categories = [item[0] for item in data]
+            dates = [item[0] for item in data]
             counts = [item[1] for item in data]
-            color_map = {
-                "Học tập": "#1976D2",
-                "Công việc": "#F57C00",
-                "Cá nhân": "#388E3C",
-                "Chung": "#757575",
-            }
-            fallback_colors = ["#7B1FA2", "#0097A7", "#C2185B", "#AFB42B"]
-            colors = [
-                color_map.get(category, fallback_colors[index % len(fallback_colors)])
-                for index, category in enumerate(categories)
-            ]
-            axes.pie(
-                counts,
-                labels=categories,
-                colors=colors,
-                autopct="%1.1f%%",
-                startangle=90,
-            )
-            axes.set_title("Tỷ lệ ghi chú theo chủ đề")
-            axes.axis("equal")
+            axes.bar(dates, counts, color="#1976D2", width=0.7)
+            axes.set_xlabel("Tháng" if period == "month" else "Ngày")
+            axes.set_ylabel("Số lượng ghi chú")
+            axes.set_title("Năng suất làm việc theo thời gian")
+            axes.tick_params(axis="x", rotation=0, pad=8)
+            axes.grid(axis="y", alpha=0.25)
         self.stats_figure.tight_layout()
         self.stats_canvas.draw()
 
