@@ -65,6 +65,8 @@ class NoteController:
         image_url: Optional[str] = None,
     ) -> Tuple[bool, str]:
         """Cập nhật thông tin ghi chú."""
+        if not note_id:
+            return False, "Không tìm thấy ghi chú để cập nhật!"
         if not title or not content:
             return False, "Tiêu đề và nội dung không được để trống!"
 
@@ -83,5 +85,5 @@ class NoteController:
         """Xóa ghi chú theo ID."""
         if not note_id:
             return False, "ID ghi chú không hợp lệ!"
-            
+
         return NoteAPI.delete_note(note_id)

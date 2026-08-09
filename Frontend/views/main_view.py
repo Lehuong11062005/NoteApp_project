@@ -303,11 +303,11 @@ class MainAppWindow(tk.Tk):
         self.note_category_label.config(text=f"Chủ đề: {note.category}")
         self.note_priority_label.config(text=f"Mức độ: {note.priority}")
         self.note_create_at_label.config(text=f"Ngày tạo: {note.create_at}")
-        
+
         content_preview = note.content if note.content else ""
         if len(content_preview) > 150:
             content_preview = content_preview[:150] + "..."
-            
+
         self.note_preview.config(text=f"Nội dung: {content_preview}")
         self.info_label.config(
             text="Nhấn nút Sửa Ghi Chú hoặc nháy đúp để chỉnh sửa."
