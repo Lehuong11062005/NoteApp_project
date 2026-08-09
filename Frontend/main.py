@@ -13,8 +13,13 @@ from Frontend.views.main_view import MainAppWindow
 
 def start_main_app(user):
     # Khởi chạy màn hình chính với thông tin user vừa đăng nhập
-    app = MainAppWindow(user)
+    app = MainAppWindow(user, on_logout_callback=show_login)
     app.mainloop()
+
+def show_login():
+    # Mở màn hình Đăng nhập
+    login_app = LoginWindow(on_success_callback=start_main_app)
+    login_app.mainloop()
 
 def launch():
     # 1. Kiểm tra kết nối tới Backend trước khi mở App
@@ -27,9 +32,7 @@ def launch():
         return
 
     # 2. Nếu Backend OK, mở màn hình Đăng nhập
-    # Truyền hàm start_main_app vào để nó tự mở Ghi chú sau khi Login đúng
-    login_app = LoginWindow(on_success_callback=start_main_app)
-    login_app.mainloop()
+    show_login()
 
 if __name__ == "__main__":
     launch()

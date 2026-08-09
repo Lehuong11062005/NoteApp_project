@@ -26,3 +26,13 @@ class AuthAPI:
             return False, res.json().get("detail", "Lỗi đăng ký")
         except Exception as e:
             return False, str(e)
+
+    @staticmethod
+    def get_profile():
+        try:
+            res = APIClient.get("/api/user/profile")
+            if res.status_code == 200:
+                return True, res.json()
+            return False, res.json().get("detail", "Không thể lấy thông tin người dùng")
+        except Exception as e:
+            return False, str(e)
