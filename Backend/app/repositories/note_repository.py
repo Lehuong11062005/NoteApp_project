@@ -43,6 +43,22 @@ class NoteRepository:
             notes.append(item)
         return notes
 
+    def get_note_counts_by_category(self, user_id: str) -> list:
+        pipeline = [
+            {"$match": {"user_id": user_id}},
+            {
+                "$group": {
+                    "_id": {"$ifNull": ["$category", "Chung"]},
+                    "count": {"$sum": 1},
+                }
+            },
+            {"$sort": {"count": -1, "_id": 1}},
+        ]
+        return [
+            {"category": item["_id"], "count": item["count"]}
+            for item in self.collection.aggregate(pipeline)
+        ]
+
     def update_note(self, note_id: str, update_data: dict):
         if "update_at" not in update_data:
             update_data["update_at"] = datetime.now()

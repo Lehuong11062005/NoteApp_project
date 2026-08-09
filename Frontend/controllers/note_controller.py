@@ -21,6 +21,15 @@ class NoteController:
             return True, notes
         return False, data
 
+    def get_statistics(self):
+        success, data = NoteAPI.get_statistics(self.username)
+        if success:
+            return True, [
+                (item.get("category") or "Chung", item.get("count", 0))
+                for item in data
+            ]
+        return False, data
+
     def create_note(self, title, content, category, priority, reminder_time=None, image_url=None):
         if not title or not content:
             return False, "Tiêu đề và nội dung không được để trống!"

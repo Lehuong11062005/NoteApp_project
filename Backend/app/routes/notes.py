@@ -25,6 +25,16 @@ def get_notes(user_id: str):
         raise HTTPException(status_code=400, detail=str(e))
 
 
+@router.get("/statistics", status_code=status.HTTP_200_OK)
+def get_note_statistics(user_id: str):
+    if not user_id:
+        raise HTTPException(status_code=400, detail="user_id is required")
+    try:
+        return note_service.get_note_counts_by_category(user_id=user_id)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 @router.put("/{note_id}", status_code=status.HTTP_200_OK)
 def update_note(note_id: str, note: NoteCreateSchema):
     try:

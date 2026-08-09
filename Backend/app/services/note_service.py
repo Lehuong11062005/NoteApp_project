@@ -25,6 +25,9 @@ class NoteService:
     def get_notes_by_user(self, user_id: str):
         return self.note_repo.get_notes_by_user(user_id)
 
+    def get_note_counts_by_category(self, user_id: str):
+        return self.note_repo.get_note_counts_by_category(user_id)
+
     def update_note(self, note_id: str, note_data: NoteCreateSchema):
         update_data = note_data.dict(exclude_unset=True)
         if not update_data:

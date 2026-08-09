@@ -18,6 +18,18 @@ class NoteAPI:
             return False, str(e)
 
     @staticmethod
+    def get_statistics(user_id: Optional[str] = None):
+        url = f"{APIClient.BASE_URL}/api/notes/statistics"
+        params = {"user_id": user_id} if user_id else {}
+        try:
+            res = requests.get(url, params=params, timeout=APIClient.TIMEOUT)
+            if res.status_code == 200:
+                return True, res.json()
+            return False, "Lỗi lấy thống kê ghi chú"
+        except Exception as e:
+            return False, str(e)
+
+    @staticmethod
     def create_note(
         title: str,
         content: str,
