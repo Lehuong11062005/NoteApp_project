@@ -4,38 +4,44 @@ from Frontend.services.note_api import NoteAPI
 
 
 class NoteController:
-    def __init__(self, username: Optional[str] = None):
-        self.username = username
+    # Không cần lưu username nữa vì hệ thống định danh thông qua JWT Token
+    def __init__(self):
+        pass
 
+    def _parse_notes(self, data: list) -> List[Note]:
+        """Hàm nội bộ dùng chung để parse JSON thành danh sách Object Note."""
+        notes = []
+        for item in data:
+            create_at = (
+                item.get("create_at", "")[:10]
+                if item.get("create_at")
+                else ""
+            )
+            note = Note(
+                id=item.get("_id"),
+                title=item.get("title", "No Title"),
+                content=item.get("content", ""),
+                category=item.get("category", ""),
+                priority=item.get("priority", ""),
+                create_at=create_at,
+                status=item.get("status", "Đang chờ"),
+                reminder_time=item.get("reminder_time"),
+                image_url=item.get("image_url")         
+            )
+            notes.append(note)
+        return notes
     def get_notes(self) -> Tuple[bool, Union[List[Note], str]]:
         """Lấy danh sách các ghi chú của người dùng."""
-        success, data = NoteAPI.get_all(self.username)
-        if success:
-            notes = []
-            if isinstance(data, list):
-                for item in data:
-                    create_at = (
-                        item.get("create_at", "")[:10]
-                        if item.get("create_at")
-                        else ""
-                    )
-                    note = Note(
-                        id=item.get("_id"),
-                        title=item.get("title", "No Title"),
-                        content=item.get("content", ""),
-                        category=item.get("category", ""),
-                        priority=item.get("priority", ""),
-                        create_at=create_at,
-                    )
-                    notes.append(note)
-            return True, notes
+        success, data = NoteAPI.get_all()
+        if success and isinstance(data, list):
+            return True, self._parse_notes(data)
         return False, data or "Không thể tải danh sách ghi chú"
 
     def get_statistics(
         self, period: str = "day"
     ) -> Tuple[bool, Union[List[Tuple[str, int]], str]]:
         """Lấy thống kê số lượng ghi chú theo thời gian hoặc danh mục."""
-        success, data = NoteAPI.get_statistics(self.username, period=period)
+        success, data = NoteAPI.get_statistics(period=period)
         if success and isinstance(data, list):
             return True, [
                 (
@@ -48,26 +54,9 @@ class NoteController:
 
     def search_notes(self, keyword: str) -> Tuple[bool, Union[List[Note], str]]:
         """Tìm kiếm ghi chú theo từ khóa."""
-        success, data = NoteAPI.search(keyword=keyword, user_id=self.username)
-        if success:
-            notes = []
-            if isinstance(data, list):
-                for item in data:
-                    create_at = (
-                        item.get("create_at", "")[:10]
-                        if item.get("create_at")
-                        else ""
-                    )
-                    note = Note(
-                        id=item.get("_id"),
-                        title=item.get("title", "No Title"),
-                        content=item.get("content", ""),
-                        category=item.get("category", ""),
-                        priority=item.get("priority", ""),
-                        create_at=create_at,
-                    )
-                    notes.append(note)
-            return True, notes
+        success, data = NoteAPI.search(keyword=keyword)
+        if success and isinstance(data, list):
+            return True, self._parse_notes(data)
         return False, data or "Không thể tìm kiếm ghi chú"
 
     def create_note(
@@ -90,7 +79,6 @@ class NoteController:
             priority=priority,
             reminder_time=reminder_time,
             image_url=image_url,
-            user_id=self.username,
         )
 
     def update_note(
@@ -102,6 +90,7 @@ class NoteController:
         priority: str,
         reminder_time: Optional[str] = None,
         image_url: Optional[str] = None,
+        status: Optional[str] = None, 
     ) -> Tuple[bool, str]:
         """Cập nhật thông tin ghi chú."""
         if not note_id:
@@ -117,12 +106,10 @@ class NoteController:
             priority=priority,
             reminder_time=reminder_time,
             image_url=image_url,
-            user_id=self.username,
+            status=status  
         )
-
     def delete_note(self, note_id: str) -> Tuple[bool, str]:
         """Xóa ghi chú theo ID."""
         if not note_id:
             return False, "ID ghi chú không hợp lệ!"
-
         return NoteAPI.delete_note(note_id)

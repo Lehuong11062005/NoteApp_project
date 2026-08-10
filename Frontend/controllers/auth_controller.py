@@ -9,16 +9,21 @@ class AuthController:
             return False, "Vui lòng nhập đầy đủ thông tin!"
         
         success, data = AuthAPI.login(username, password)
-        if success:
+        
+        if success and isinstance(data, dict):
             # 1. Lấy token từ response trả về của backend
             token = data.get("access_token")
             
-            # 2. Lưu token vào APIClient để tự động đính kèm vào các request sau (Notes,...)
+            # 2. Lưu token vào APIClient để tự động đính kèm vào các request sau
             if token:
                 APIClient.set_token(token)
             
-            # 3. Khởi tạo User và trả về
-            user = User(username=data['user']['username'], fullname=data['user']['fullname'])
+            # 3. Khởi tạo User an toàn bằng .get() và trả về
+            user_data = data.get("user", {})
+            user = User(
+                username=user_data.get("username", ""), 
+                fullname=user_data.get("fullname", "")
+            )
             return True, user
             
         return False, data
@@ -33,7 +38,7 @@ class AuthController:
 
     def get_profile(self):
         success, data = AuthAPI.get_profile()
-        if success:
+        if success and isinstance(data, dict):
             user = User(
                 username=data.get("username", ""),
                 fullname=data.get("fullname", ""),
