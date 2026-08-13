@@ -1,8 +1,14 @@
 import sys
-import datetime
+import threading
 from pathlib import Path
 import tkinter as tk
 from tkinter import ttk, messagebox
+from tkcalendar import DateEntry
+try:
+    from PIL import Image, ImageTk
+    PIL_AVAILABLE = True
+except ImportError:
+    PIL_AVAILABLE = False
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
@@ -15,24 +21,26 @@ from Frontend.services.upload_api import UploadAPI
 class AddNoteWindow(tk.Toplevel):
     def __init__(self, parent, note_data=None):
         super().__init__(parent)
-        self.note_controller = NoteController() 
+        self.note_controller = NoteController()
         self.note_data = note_data
         self.note_id = getattr(note_data, "id", None) if note_data else None
         self.edit_mode = self.note_id is not None
         self.uploaded_image_url = getattr(note_data, "image_url", None) if self.edit_mode else None
+        self._photo_ref = None  # giữ reference để tránh GC
 
         self.title("Cập nhật Ghi Chú" if self.edit_mode else "Thêm Ghi Chú Mới")
-        self.geometry("520x680")
+        self.geometry("520x700")
+        self.grab_set()
 
         # Tiêu đề
-        tk.Label(self, text="Tiêu đề:", font=("Arial", 10, "bold")).pack(anchor="w", padx=10, pady=(10,0))
+        tk.Label(self, text="Tiêu đề:", font=("Arial", 10, "bold")).pack(anchor="w", padx=10, pady=(10, 0))
         self.entry_title = tk.Entry(self, width=60, font=("Arial", 10))
         self.entry_title.pack(padx=10, pady=2)
 
-        # Cụm Chủ đề & Mức độ (chia 2 cột)
+        # Cụm Chủ đề & Mức độ
         frame_row1 = tk.Frame(self)
         frame_row1.pack(fill="x", padx=10, pady=5)
-        
+
         tk.Label(frame_row1, text="Chủ đề:").pack(side="left")
         self.cb_category = ttk.Combobox(frame_row1, values=["Học tập", "Công việc", "Cá nhân", "Chung"], width=15)
         self.cb_category.current(3)
@@ -43,50 +51,46 @@ class AddNoteWindow(tk.Toplevel):
         self.cb_priority.current(1)
         self.cb_priority.pack(side="left", padx=5)
 
-        # Thời gian nhắc nhở (Giao diện chọn Ngày/Tháng/Năm Giờ:Phút)
-        frame_reminder_box = tk.LabelFrame(self, text="Hẹn giờ nhắc nhở (Tùy chọn)", font=("Arial", 9, "bold"), fg="#333333")
-        frame_reminder_box.pack(fill="x", padx=10, pady=5)
+        # ==========================================
+        # KHU VỰC THỜI GIAN NHẮC NHỞ (từ main - dùng DateEntry có lịch)
+        # ==========================================
+        self.use_reminder_var = tk.BooleanVar(value=False)
+        tk.Checkbutton(
+            self, text="Bật nhắc nhở (Chọn ngày giờ)",
+            variable=self.use_reminder_var,
+            command=self.toggle_reminder
+        ).pack(anchor="w", padx=5, pady=(5, 0))
 
-        self.var_enable_reminder = tk.BooleanVar(value=False)
-        self.chk_reminder = tk.Checkbutton(
-            frame_reminder_box, text="Bật nhắc nhở", variable=self.var_enable_reminder,
-            command=self._toggle_reminder_state, font=("Arial", 9)
+        # Khung vỏ bọc cố định
+        self.reminder_container = tk.Frame(self)
+        self.reminder_container.pack(fill="x", padx=10, pady=2)
+
+        # Khung chứa bộ chọn thời gian nằm bên trong vỏ bọc
+        self.frame_time = tk.Frame(self.reminder_container)
+
+        # Bộ chọn Ngày (DateEntry - có lịch popup)
+        self.cal_date = DateEntry(
+            self.frame_time, width=12, background='#1976D2',
+            foreground='white', borderwidth=2, date_pattern='yyyy-mm-dd'
         )
-        self.chk_reminder.pack(anchor="w", padx=5, pady=2)
+        self.cal_date.pack(side="left", padx=(0, 15))
 
-        frame_datetime = tk.Frame(frame_reminder_box)
-        frame_datetime.pack(fill="x", padx=5, pady=2)
+        # Bộ chọn Giờ
+        tk.Label(self.frame_time, text="Giờ:").pack(side="left")
+        self.spin_hour = ttk.Spinbox(self.frame_time, from_=0, to=23, width=3, format="%02.0f")
+        self.spin_hour.set("08")
+        self.spin_hour.pack(side="left", padx=(2, 10))
 
-        now = datetime.datetime.now()
-        
-        tk.Label(frame_datetime, text="Ngày:").pack(side="left")
-        self.sb_day = ttk.Spinbox(frame_datetime, from_=1, to=31, width=4, format="%02.0f")
-        self.sb_day.pack(side="left", padx=(2, 6))
-        self.sb_day.set(f"{now.day:02d}")
+        # Bộ chọn Phút
+        tk.Label(self.frame_time, text="Phút:").pack(side="left")
+        self.spin_minute = ttk.Spinbox(self.frame_time, from_=0, to=59, width=3, format="%02.0f")
+        self.spin_minute.set("00")
+        self.spin_minute.pack(side="left", padx=(2, 0))
 
-        tk.Label(frame_datetime, text="Tháng:").pack(side="left")
-        self.sb_month = ttk.Spinbox(frame_datetime, from_=1, to=12, width=4, format="%02.0f")
-        self.sb_month.pack(side="left", padx=(2, 6))
-        self.sb_month.set(f"{now.month:02d}")
+        self.toggle_reminder()
+        # ==========================================
 
-        tk.Label(frame_datetime, text="Năm:").pack(side="left")
-        self.sb_year = ttk.Spinbox(frame_datetime, from_=2024, to=2035, width=6)
-        self.sb_year.pack(side="left", padx=(2, 10))
-        self.sb_year.set(str(now.year))
-
-        tk.Label(frame_datetime, text="Giờ:").pack(side="left")
-        self.sb_hour = ttk.Spinbox(frame_datetime, from_=0, to=23, width=4, format="%02.0f")
-        self.sb_hour.pack(side="left", padx=(2, 6))
-        self.sb_hour.set(f"{now.hour:02d}")
-
-        tk.Label(frame_datetime, text="Phút:").pack(side="left")
-        self.sb_minute = ttk.Spinbox(frame_datetime, from_=0, to=59, width=4, format="%02.0f")
-        self.sb_minute.pack(side="left", padx=2)
-        self.sb_minute.set(f"{now.minute:02d}")
-
-        self.datetime_widgets = [self.sb_day, self.sb_month, self.sb_year, self.sb_hour, self.sb_minute]
-
-        # Đính kèm ảnh (Tải lên qua API)
+        # Đính kèm ảnh (Upload qua API - từ feature/image-upload)
         frame_img_box = tk.LabelFrame(self, text="Ảnh đính kèm", font=("Arial", 9, "bold"), fg="#333333")
         frame_img_box.pack(fill="x", padx=10, pady=5)
 
@@ -108,22 +112,26 @@ class AddNoteWindow(tk.Toplevel):
         self.lbl_img_status = tk.Label(frame_img_box, text="Chưa có ảnh nào", fg="#666666", anchor="w", wraplength=480)
         self.lbl_img_status.pack(fill="x", padx=5, pady=(2, 5))
 
+        # Khu vực hiển thị ảnh preview
+        self.lbl_img_preview = tk.Label(frame_img_box, bg="#f0f0f0", relief="flat")
+
         if self.uploaded_image_url:
-            self.lbl_img_status.config(text=f"✓ Đã có ảnh đính kèm", fg="#2E7D32")
+            self.lbl_img_status.config(text="✓ Đã có ảnh đính kèm", fg="#2E7D32")
+            self._load_image_from_url(self.uploaded_image_url)
         else:
             self.btn_clear_img.pack_forget()
 
         # Trạng thái (Chỉ hiển thị khi đang trong chế độ Sửa)
         if self.edit_mode:
-            tk.Label(self, text="Trạng thái:").pack(anchor="w", padx=10, pady=(5,0))
+            tk.Label(self, text="Trạng thái:").pack(anchor="w", padx=10, pady=(5, 0))
             self.cb_status = ttk.Combobox(self, values=["Đang chờ", "Đã hoàn thành", "Quá hạn"], width=57)
             self.cb_status.pack(padx=10, pady=2)
-            
+
             current_status = getattr(note_data, "status", "Đang chờ")
             self.cb_status.set(current_status)
 
         # Nội dung
-        tk.Label(self, text="Nội dung:", font=("Arial", 10, "bold")).pack(anchor="w", padx=10, pady=(5,0))
+        tk.Label(self, text="Nội dung:", font=("Arial", 10, "bold")).pack(anchor="w", padx=10, pady=(5, 0))
         self.txt_content = tk.Text(self, height=8, width=60, font=("Arial", 10))
         self.txt_content.pack(padx=10, pady=2)
 
@@ -132,14 +140,22 @@ class AddNoteWindow(tk.Toplevel):
             self.entry_title.insert(0, getattr(note_data, "title", ""))
             self.cb_category.set(getattr(note_data, "category", "Chung"))
             self.cb_priority.set(getattr(note_data, "priority", "Bình Thường"))
-            
-            reminder = getattr(note_data, "reminder_time", "")
-            if reminder:
-                self._load_reminder_time(str(reminder))
-            
             self.txt_content.insert("1.0", getattr(note_data, "content", ""))
 
-        self._toggle_reminder_state()
+            # Khôi phục thời gian nhắc nhở nếu có
+            reminder = getattr(note_data, "reminder_time", "")
+            if reminder and len(str(reminder)) >= 16:  # Format: YYYY-MM-DD HH:MM
+                self.use_reminder_var.set(True)
+                self.toggle_reminder()
+
+                reminder_str = str(reminder)
+                date_part = reminder_str[:10]
+                time_part = reminder_str[11:16]
+                hour_part, min_part = time_part.split(":")
+
+                self.cal_date.set_date(date_part)
+                self.spin_hour.set(hour_part)
+                self.spin_minute.set(min_part)
 
         self.btn_save = tk.Button(
             self, text="Cập nhật" if self.edit_mode else "Lưu Ghi Chú",
@@ -148,24 +164,49 @@ class AddNoteWindow(tk.Toplevel):
         )
         self.btn_save.pack(pady=12)
 
-    def _toggle_reminder_state(self):
-        state = "normal" if self.var_enable_reminder.get() else "disabled"
-        for w in self.datetime_widgets:
-            w.config(state=state)
+    def toggle_reminder(self):
+        """Hàm bật/tắt hiển thị bộ chọn thời gian an toàn trong Container"""
+        if self.use_reminder_var.get():
+            self.frame_time.pack(fill="x")
+        else:
+            self.frame_time.pack_forget()
 
-    def _load_reminder_time(self, reminder_str: str):
-        for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M"):
+    def _load_image_from_url(self, url: str):
+        """Tải và hiển thị ảnh preview từ URL (chạy ngầm)"""
+        if not PIL_AVAILABLE or not url:
+            return
+
+        def _fetch():
             try:
-                dt = datetime.datetime.strptime(reminder_str.strip(), fmt)
-                self.var_enable_reminder.set(True)
-                self.sb_day.set(f"{dt.day:02d}")
-                self.sb_month.set(f"{dt.month:02d}")
-                self.sb_year.set(str(dt.year))
-                self.sb_hour.set(f"{dt.hour:02d}")
-                self.sb_minute.set(f"{dt.minute:02d}")
-                return
-            except ValueError:
-                pass
+                import urllib.request
+                import io
+                with urllib.request.urlopen(url, timeout=5) as resp:
+                    data = resp.read()
+                img = Image.open(io.BytesIO(data))
+                img.thumbnail((200, 150), Image.LANCZOS)
+                self.after(0, lambda: self._show_preview(img))
+            except Exception:
+                pass  # Nếu không tải được thì bỏ qua
+
+        threading.Thread(target=_fetch, daemon=True).start()
+
+    def _show_preview(self, img):
+        """Hiển thị ảnh thumbnail lên giao diện"""
+        photo = ImageTk.PhotoImage(img)
+        self._photo_ref = photo
+        self.lbl_img_preview.config(image=photo)
+        self.lbl_img_preview.pack(padx=5, pady=(0, 5))
+
+    def _show_local_preview(self, filepath: str):
+        """Hiển thị ảnh preview từ file local"""
+        if not PIL_AVAILABLE:
+            return
+        try:
+            img = Image.open(filepath)
+            img.thumbnail((200, 150), Image.LANCZOS)
+            self._show_preview(img)
+        except Exception:
+            pass
 
     def on_choose_image(self):
         filepath = choose_image_file()
@@ -178,11 +219,13 @@ class AddNoteWindow(tk.Toplevel):
         self.btn_select_img.config(state="disabled")
         self.update_idletasks()
 
+        # Hiển thị preview từ file local ngay lập tức
+        self._show_local_preview(filepath)
+
         def _do_upload():
             success, res = UploadAPI.upload_image(filepath)
             self.after(0, lambda: self._on_upload_done(success, res))
 
-        import threading
         threading.Thread(target=_do_upload, daemon=True).start()
 
     def _on_upload_done(self, success: bool, res: str):
@@ -193,11 +236,16 @@ class AddNoteWindow(tk.Toplevel):
             self.btn_clear_img.pack(side="left")
         else:
             self.lbl_img_status.config(text=f"❌ {res}", fg="#C62828")
+            # Ẩn preview nếu upload thất bại
+            self.lbl_img_preview.pack_forget()
             messagebox.showerror("Lỗi tải ảnh", f"Không thể upload ảnh:\n{res}")
 
     def on_clear_image(self):
         self.uploaded_image_url = None
+        self._photo_ref = None
         self.lbl_img_status.config(text="Chưa có ảnh nào", fg="#666666")
+        self.lbl_img_preview.config(image="")
+        self.lbl_img_preview.pack_forget()
         self.btn_clear_img.pack_forget()
 
     def save_note(self):
@@ -207,18 +255,13 @@ class AddNoteWindow(tk.Toplevel):
         priority = self.cb_priority.get()
         image_url = self.uploaded_image_url
 
+        # Lấy dữ liệu thời gian nếu Checkbox được bật
         reminder_time = None
-        if self.var_enable_reminder.get():
-            try:
-                d = int(self.sb_day.get())
-                m = int(self.sb_month.get())
-                y = int(self.sb_year.get())
-                h = int(self.sb_hour.get())
-                mn = int(self.sb_minute.get())
-                reminder_time = f"{y:04d}-{m:02d}-{d:02d} {h:02d}:{mn:02d}"
-            except ValueError:
-                messagebox.showerror("Lỗi", "Ngày giờ nhắc nhở không hợp lệ!")
-                return
+        if self.use_reminder_var.get():
+            date_val = self.cal_date.get()
+            hour_val = self.spin_hour.get().zfill(2)
+            minute_val = self.spin_minute.get().zfill(2)
+            reminder_time = f"{date_val} {hour_val}:{minute_val}"
 
         if self.edit_mode:
             status = self.cb_status.get()
@@ -237,4 +280,4 @@ class AddNoteWindow(tk.Toplevel):
             messagebox.showinfo("Thành công", msg)
             self.destroy()
         else:
-            messagebox.showerror("Lỗi", msg)
+            messagebox.showerror("Lỗi", msg)
