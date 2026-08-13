@@ -57,6 +57,14 @@ class NoteAPI:
         return False, NoteAPI._parse_error(res)
 
     @staticmethod
+    def get_statistics_by_status() -> Tuple[bool, Any]:
+        """Lấy thống kê ghi chú theo trạng thái từ Backend."""
+        res = APIClient.get("/api/notes/statistics/status")
+        if res.status_code == 200:
+            return True, res.json()
+        return False, NoteAPI._parse_error(res)
+
+    @staticmethod
     def create_note(
         title: str, content: str, category: str, priority: str,
         reminder_time: Optional[str] = None, image_url: Optional[str] = None

@@ -53,6 +53,15 @@ def get_note_statistics_by_category(
     user_id = current_user["sub"]
     return note_service.get_note_counts_by_category(user_id=user_id)
 
+@router.get("/statistics/status", status_code=status.HTTP_200_OK)
+def get_note_statistics_by_status(
+    current_user: dict = Depends(verify_token),
+    note_service: NoteService = Depends()
+):
+    """Lấy thống kê ghi chú theo trạng thái."""
+    user_id = current_user["sub"]
+    return note_service.get_note_counts_by_status(user_id=user_id)
+
 
 @router.get("/{note_id}", status_code=status.HTTP_200_OK)
 def get_note_by_id(

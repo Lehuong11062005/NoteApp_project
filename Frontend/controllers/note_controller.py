@@ -4,7 +4,6 @@ from Frontend.services.note_api import NoteAPI
 
 
 class NoteController:
-    # Không cần lưu username nữa vì hệ thống định danh thông qua JWT Token
     def __init__(self):
         pass
 
@@ -51,6 +50,19 @@ class NoteController:
                 for item in data
             ]
         return False, data or "Không thể lấy dữ liệu thống kê"
+
+    def get_statistics_by_status(self) -> Tuple[bool, Union[List[Tuple[str, int]], str]]:
+        """Xử lý dữ liệu thống kê trạng thái để trả về cho View vẽ biểu đồ."""
+        success, data = NoteAPI.get_statistics_by_status()
+        if success and isinstance(data, list):
+            return True, [
+                (
+                    item.get("status") or "Chưa xác định",
+                    item.get("count", 0),
+                )
+                for item in data
+            ]
+        return False, data or "Không thể lấy dữ liệu thống kê trạng thái"
 
     def search_notes(self, keyword: str) -> Tuple[bool, Union[List[Note], str]]:
         """Tìm kiếm ghi chú theo từ khóa."""

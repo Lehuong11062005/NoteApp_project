@@ -129,3 +129,17 @@ class NoteRepository:
             {"category": item["_id"], "count": item["count"]}
             for item in self.collection.aggregate(pipeline)
         ]
+
+    def get_note_counts_by_status(self, user_id: str) -> List[Dict[str, Any]]:
+        """Thống kê số lượng ghi chú theo trạng thái."""
+        pipeline = [
+            {"$match": {"user_id": user_id}},
+            {"$group": {
+                "_id": {"$ifNull": ["$status", "Đang chờ"]}, 
+                "count": {"$sum": 1}
+            }}
+        ]
+        return [
+            {"status": item["_id"], "count": item["count"]} 
+            for item in self.collection.aggregate(pipeline)
+        ]

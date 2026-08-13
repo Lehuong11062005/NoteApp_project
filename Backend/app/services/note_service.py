@@ -93,3 +93,7 @@ class NoteService:
     def get_note_counts_by_category(self, user_id: str) -> List[Dict[str, Any]]:
         """Thống kê số lượng ghi chú theo danh mục của user."""
         return self.note_repo.get_note_counts_by_category(user_id)
+
+    def get_note_counts_by_status(self, user_id: str) -> List[Dict[str, Any]]:
+        """Thống kê ghi chú theo trạng thái."""
+        return self.note_repo.get_note_counts_by_status(user_id)
