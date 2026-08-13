@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, Depends, Query
 from app.services import upload_service
-from app.middleware.jwt_auth import get_current_user
+from app.middleware.jwt_auth import verify_token
 from app.config.database import get_database
 
 router = APIRouter(prefix="/upload", tags=["Upload"])
@@ -25,7 +25,7 @@ async def upload_image_general(
 @router.post("/avatar", summary="Upload ảnh đại diện")
 async def upload_avatar(
     file: UploadFile = File(...),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(verify_token),
     db=Depends(get_database)
 ):
     image_info = await upload_service.upload_avatar(file, db, current_user["user_id"])
@@ -40,7 +40,7 @@ async def upload_avatar(
 async def upload_note_image(
     file: UploadFile = File(...),
     note_id: str = Query(...),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(verify_token),
     db=Depends(get_database)
 ):
     image_info = await upload_service.upload_note_image(file, db, note_id, current_user["user_id"])
@@ -54,7 +54,7 @@ async def upload_note_image(
 @router.post("/image", summary="Upload ảnh lên ImgBB và trả về URL công khai")
 async def upload_image_local_endpoint(
     file: UploadFile = File(..., description="File ảnh cần upload"),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(verify_token)
 ):
     """
     **API POST /api/upload/image**

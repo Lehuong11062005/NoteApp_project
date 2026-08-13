@@ -1,5 +1,6 @@
 import os
 import requests
+from Frontend.services.api_client import APIClient
 
 class UploadAPI:
     @staticmethod
@@ -9,12 +10,11 @@ class UploadAPI:
         Yêu cầu Authorization header nếu có JWT token.
         Trả về (is_success: bool, url_or_msg: str)
         """
-        import Frontend.services.api_client as api_client
-        
-        url = f"{api_client.BASE_URL}/api/upload/image"
+        url = f"{APIClient.BASE_URL}/api/upload/image"
         headers = {}
-        if api_client.CURRENT_JWT_TOKEN:
-            headers["Authorization"] = f"Bearer {api_client.CURRENT_JWT_TOKEN}"
+        token = APIClient.get_token()
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
 
         try:
             if not os.path.exists(filepath):
@@ -41,3 +41,4 @@ class UploadAPI:
             return False, "Không thể kết nối đến máy chủ Backend!"
         except Exception as e:
             return False, f"Lỗi upload: {str(e)}"
+

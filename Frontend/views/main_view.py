@@ -12,6 +12,7 @@ from Frontend.controllers.note_controller import NoteController
 from Frontend.views.profile_view import ProfileWindow
 from Frontend.views.tabs.notes_tab import NotesTab
 from Frontend.views.tabs.stats_tab import StatsTab
+from Frontend.utils import image_cache
 
 class MainAppWindow(tk.Tk):
     def __init__(self, user, on_logout_callback=None):
@@ -30,6 +31,9 @@ class MainAppWindow(tk.Tk):
         self._configure_styles()
         self._build_header()
         self._build_tabs()
+
+        # Giải phóng cache khi đóng cửa sổ (nhấn X)
+        self.protocol("WM_DELETE_WINDOW", self._on_close)
 
         # Load dữ liệu lần đầu
         self.notes_tab.load_data()
@@ -67,9 +71,17 @@ class MainAppWindow(tk.Tk):
         notebook.add(self.notes_tab, text="Danh sách ghi chú")
         notebook.add(self.stats_tab, text="Thống kê")
 
+    def _on_close(self):
+        """Xử lý khi đóng cửa sổ bằng nút X."""
+        image_cache.clear()
+        self.destroy()
+        if self.on_logout_callback:
+            self.on_logout_callback()
+
     def handle_logout(self):
         if messagebox.askyesno("Đăng xuất", "Bạn có chắc chắn muốn đăng xuất?"):
             self.auth_controller.logout()
+            image_cache.clear()  # Giải phóng ảnh khỏi RAM
             self.destroy()
             if self.on_logout_callback:
                 self.on_logout_callback()
