@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+from PIL import Image, ImageTk
 from Frontend.views.add_note_view import AddNoteWindow
+from Frontend.utils import image_cache
 
 class NotesTab(ttk.Frame):
     def __init__(self, parent, main_window, note_controller):
@@ -11,6 +13,8 @@ class NotesTab(ttk.Frame):
         self.selected_note_id = None
         self.current_search_keyword = ""
         self.edit_window_open = False
+        self.current_pil_image = None
+        self.tk_thumb_img = None
 
         self._build_search_frame()
         self._build_content_frame()
@@ -60,19 +64,32 @@ class NotesTab(ttk.Frame):
         # Khung chi tiết
         self.detail_frame = ttk.LabelFrame(content_frame, text="Thông tin ghi chú", padding=(10, 10))
         self.detail_frame.pack(side="right", fill="y", padx=(10, 0), pady=0)
-        self.detail_frame.configure(width=250)
+        self.detail_frame.configure(width=280)
 
-        self.lbl_title = tk.Label(self.detail_frame, text="Tiêu đề: ", anchor="w", justify="left", font=("Arial", 10, "bold"), wraplength=230)
+        self.lbl_title = tk.Label(self.detail_frame, text="Tiêu đề: ", anchor="w", justify="left", font=("Arial", 10, "bold"), wraplength=260)
         self.lbl_category = tk.Label(self.detail_frame, text="Chủ đề: ", anchor="w", justify="left", font=("Arial", 10))
         self.lbl_priority = tk.Label(self.detail_frame, text="Mức độ: ", anchor="w", justify="left", font=("Arial", 10))
         self.lbl_status = tk.Label(self.detail_frame, text="Trạng thái: ", anchor="w", justify="left", font=("Arial", 10, "bold"))
         self.lbl_date = tk.Label(self.detail_frame, text="Ngày tạo: ", anchor="w", justify="left", font=("Arial", 10))
         self.lbl_reminder = tk.Label(self.detail_frame, text="Nhắc nhở: ", anchor="w", justify="left", font=("Arial", 10), fg="#E65100")
-        self.lbl_preview = tk.Label(self.detail_frame, text="Nội dung:", anchor="nw", justify="left", wraplength=230, font=("Arial", 10), fg="#333333")
-        self.lbl_info = tk.Label(self.detail_frame, text="Chọn ghi chú để xem chi tiết.", fg="#777777", wraplength=230, justify="left", font=("Arial", 9))
+        self.lbl_preview = tk.Label(self.detail_frame, text="Nội dung:", anchor="nw", justify="left", wraplength=260, font=("Arial", 10), fg="#333333")
 
-        for lbl in (self.lbl_title, self.lbl_category, self.lbl_priority, self.lbl_status, self.lbl_date, self.lbl_reminder, self.lbl_preview, self.lbl_info):
+        # Ô hiển thị ảnh đính kèm (dưới nội dung, to 1 chút)
+        self.frame_image_preview = tk.LabelFrame(self.detail_frame, text="🖼️ Ảnh đính kèm (Nhấn để phóng to)", font=("Arial", 9, "bold"))
+        self.lbl_img_preview = tk.Label(self.frame_image_preview, text="", cursor="hand2")
+        self.lbl_img_preview.pack(padx=5, pady=5)
+        self.lbl_img_preview.bind("<Button-1>", lambda e: self._open_fullscreen_image())
+
+        self.lbl_info = tk.Label(self.detail_frame, text="Chọn ghi chú để xem chi tiết.", fg="#777777", wraplength=260, justify="left", font=("Arial", 9))
+
+        for lbl in (self.lbl_title, self.lbl_category, self.lbl_priority, self.lbl_status, self.lbl_date, self.lbl_reminder, self.lbl_preview):
             lbl.pack(fill="x", pady=(0, 4))
+        
+        # Ô ảnh đính kèm - pack sau lbl_preview, ẩn mặc định
+        self.frame_image_preview.pack(fill="x", pady=(0, 4))
+        self.frame_image_preview.pack_forget()  # Ẩn ban đầu
+        
+        self.lbl_info.pack(fill="x", pady=(4, 0))
 
     def _build_action_buttons(self):
         frame_btn = tk.Frame(self, bg="#F5F7FB")
@@ -129,6 +146,10 @@ class NotesTab(ttk.Frame):
             self.tree.tag_configure("evenrow", background="#FFFFFF")
             self.tree.tag_configure("oddrow", background="#F3F7FF")
 
+            # Pre-fetch ảnh của tất cả ghi chú vào cache RAM ngầm
+            urls = [note.image_url for note in notes if getattr(note, "image_url", None)]
+            image_cache.prefetch_many(urls)
+
     def on_tree_select(self, event=None):
         selection = self.tree.selection()
         if selection:
@@ -145,6 +166,7 @@ class NotesTab(ttk.Frame):
             self.lbl_reminder.config(text="Nhắc nhở: ")
             self.lbl_preview.config(text="Nội dung:")
             self.lbl_info.config(text="Chọn ghi chú để xem chi tiết.")
+            self._hide_image_preview()
             return
 
         self.lbl_title.config(text=f"Tiêu đề: {note.title}")
@@ -152,7 +174,6 @@ class NotesTab(ttk.Frame):
         self.lbl_priority.config(text=f"Mức độ: {note.priority}")
         self.lbl_date.config(text=f"Ngày tạo: {note.create_at}")
         
-        # Đổi màu trạng thái cho sinh động
         status_color = "#4CAF50" if note.status == "Đã hoàn thành" else "#E53935" if note.status == "Quá hạn" else "#F57C00"
         self.lbl_status.config(text=f"Trạng thái: {note.status}", fg=status_color)
         
@@ -164,6 +185,76 @@ class NotesTab(ttk.Frame):
         
         img_info = " (Có đính kèm ảnh)" if note.image_url else ""
         self.lbl_info.config(text=f"Nhấn nút Sửa hoặc nháy đúp để chỉnh sửa.{img_info}")
+
+        if note.image_url:
+            self._load_and_display_image(note.image_url)
+        else:
+            self._hide_image_preview()
+
+    def _hide_image_preview(self):
+        self.current_pil_image = None
+        self.tk_thumb_img = None
+        self.frame_image_preview.pack_forget()
+
+    def _load_and_display_image(self, image_url: str):
+        self.frame_image_preview.pack(fill="x", pady=(0, 4))
+
+        # Kiểm tra cache trước — hiển thị ngay nếu đã có
+        cached = image_cache.get(image_url)
+        if cached:
+            self._show_image_thumbnail(cached)
+            return
+
+        # Chưa có trong cache — hiện trạng thái chờ và fetch ngầm
+        self.current_pil_image = None
+        self.lbl_img_preview.config(image="", text="⏳ Đang tải ảnh...", fg="#666666", font=("Arial", 9))
+
+        def _on_fetched(url, img):
+            if img:
+                self.after(0, lambda: self._show_image_thumbnail(img))
+            else:
+                self.after(0, lambda: self.lbl_img_preview.config(
+                    image="", text="❌ Không thể tải ảnh", fg="red"
+                ))
+
+        image_cache.prefetch(image_url, on_done=_on_fetched)
+
+    def _show_image_thumbnail(self, raw_img: Image.Image):
+        try:
+            self.current_pil_image = raw_img
+            thumb = raw_img.copy()
+            thumb.thumbnail((240, 160), Image.Resampling.LANCZOS)
+            self.tk_thumb_img = ImageTk.PhotoImage(thumb)
+            self.lbl_img_preview.config(image=self.tk_thumb_img, text="")
+        except Exception as e:
+            self.lbl_img_preview.config(text=f"❌ Lỗi xử lý ảnh: {e}", fg="red")
+
+    def _open_fullscreen_image(self):
+        if not self.current_pil_image:
+            return
+
+        top = tk.Toplevel(self)
+        top.title("Xem ảnh đầy đủ")
+        top.geometry("800x650")
+
+        try:
+            full_img = self.current_pil_image.copy()
+            full_img.thumbnail((780, 580), Image.Resampling.LANCZOS)
+            tk_full = ImageTk.PhotoImage(full_img)
+
+            lbl = tk.Label(top, image=tk_full, bg="#1E1E1E")
+            lbl.image = tk_full # Giữ reference tránh garbage collector
+            lbl.pack(fill="both", expand=True, padx=5, pady=5)
+
+            btn_close = tk.Button(
+                top, text="Đóng (Esc)", bg="#E53935", fg="white", font=("Arial", 10, "bold"),
+                relief="flat", padx=15, pady=4, cursor="hand2", command=top.destroy
+            )
+            btn_close.pack(pady=(0, 8))
+
+            top.bind("<Escape>", lambda e: top.destroy())
+        except Exception as e:
+            messagebox.showerror("Lỗi", f"Không thể phóng to ảnh: {e}")
 
     def open_add_note(self):
         AddNoteWindow(self.main_window)
