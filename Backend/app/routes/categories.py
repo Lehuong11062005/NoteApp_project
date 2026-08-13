@@ -1,13 +1,15 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from app.schemas.category_schema import CategoryCreateSchema, CategoryUpdateSchema
 from app.services.category_service import CategoryService
 
 router = APIRouter(prefix="/categories", tags=["Categories"])
-category_service = CategoryService()
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-def create_category(category: CategoryCreateSchema):
+def create_category(
+    category: CategoryCreateSchema,
+    category_service: CategoryService = Depends() 
+):
     try:
         return category_service.create_category(category)
     except Exception as e:
@@ -15,7 +17,9 @@ def create_category(category: CategoryCreateSchema):
 
 
 @router.get("/", status_code=status.HTTP_200_OK)
-def get_categories():
+def get_categories(
+    category_service: CategoryService = Depends() 
+):
     try:
         return category_service.get_all_categories()
     except Exception as e:
@@ -23,7 +27,10 @@ def get_categories():
 
 
 @router.put("/{category_id}", status_code=status.HTTP_200_OK)
-def update_category(category_id: str, category: CategoryUpdateSchema):
+def update_category(
+    category_id: str, 
+    category: CategoryUpdateSchema,
+    category_service: CategoryService = Depends() ):
     try:
         return category_service.update_category(category_id, category)
     except Exception as e:
@@ -31,7 +38,10 @@ def update_category(category_id: str, category: CategoryUpdateSchema):
 
 
 @router.delete("/{category_id}", status_code=status.HTTP_200_OK)
-def delete_category(category_id: str):
+def delete_category(
+    category_id: str,
+    category_service: CategoryService = Depends() 
+):
     try:
         return category_service.delete_category(category_id)
     except Exception as e:
