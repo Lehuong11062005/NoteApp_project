@@ -10,6 +10,7 @@ from app.routes.reminders import router as reminder_router
 from app.routes.categories import router as category_router
 from app.routes.user import router as user_router
 from app.routes.upload import router as upload_router
+from app.routes.chat import router as chat_router
 from app.services.upload_service import UPLOAD_DIR
 
 from contextlib import asynccontextmanager
@@ -39,6 +40,7 @@ app.include_router(reminder_router, prefix="/api")
 app.include_router(category_router, prefix="/api")
 app.include_router(user_router, prefix="/api")
 app.include_router(upload_router, prefix="/api")
+app.include_router(chat_router,prefix="/api")
 
 @app.get("/")
 def root():

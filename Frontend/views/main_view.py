@@ -18,7 +18,7 @@ class MainAppWindow(tk.Tk):
     def __init__(self, user, on_logout_callback=None):
         super().__init__()
         self.title("Smart Note - Quản lý Ghi chú")
-        self.geometry("860x650") # Nới rộng một chút để các cột hiển thị đẹp hơn
+        self.geometry("860x650") 
         self.configure(bg="#F5F7FB")
         self.resizable(False, False)
 
@@ -50,17 +50,43 @@ class MainAppWindow(tk.Tk):
         header_frame = tk.Frame(self, bg="#ffffff", bd=0, relief="flat")
         header_frame.pack(fill="x", padx=15, pady=(10, 5))
 
+        # 1. Logo / Tiêu đề
         tk.Label(header_frame, text="Smart Note", fg="#2E3A59", bg="#ffffff", font=("Arial", 16, "bold")).pack(side="left")
 
-        tk.Button(header_frame, text="🚪 Đăng xuất", fg="#D32F2F", bg="#ffffff", font=("Arial", 9, "bold"), 
-                  bd=0, cursor="hand2", command=self.handle_logout).pack(side="right", padx=(10, 0))
-                  
-        tk.Button(header_frame, text="👤 Hồ sơ", fg="#0288D1", bg="#ffffff", font=("Arial", 9, "bold"), 
-                  bd=0, cursor="hand2", command=lambda: ProfileWindow(self)).pack(side="right", padx=5)
+        # 2. Nút Đăng xuất (Góc ngoài cùng bên phải)
+        tk.Button(
+            header_frame, text="🚪 Đăng xuất", fg="#D32F2F", bg="#ffffff", font=("Arial", 9, "bold"), 
+            bd=0, cursor="hand2", command=self.handle_logout
+        ).pack(side="right", padx=(5, 0))
 
+        # 3. Nút Hồ sơ
+        tk.Button(
+            header_frame, text="👤 Hồ sơ", fg="#0288D1", bg="#ffffff", font=("Arial", 9, "bold"), 
+            bd=0, cursor="hand2", command=lambda: ProfileWindow(self)
+        ).pack(side="right", padx=5)
+
+        # 4. Nút Trợ lý AI (Bắt buộc hiển thị)
+        btn_ai = tk.Button(
+            header_frame, text="🤖 Trợ lý AI", fg="#00897B", bg="#E0F2F1", font=("Arial", 9, "bold"), 
+            bd=0, cursor="hand2", padx=8, pady=2, command=self.open_chatbot
+        )
+        btn_ai.pack(side="right", padx=5)
+
+        # 5. Tên người dùng
         fullname = getattr(self.user, "fullname", "Người dùng")
         tk.Label(header_frame, text=f"👤 Xin chào: {fullname}", fg="#666666", bg="#ffffff", font=("Arial", 10, "italic")).pack(side="right", padx=10)
 
+    def open_chatbot(self):
+        """Hàm mở cửa sổ Chatbot"""
+        try:
+            from Frontend.views.chat_window import ChatbotWindow
+            user_id = getattr(self.user, "id", getattr(self.user, "_id", "guest"))
+            ChatbotWindow(self, user_id=str(user_id))
+        except ImportError as e:
+            messagebox.showerror(
+                "Lỗi File", 
+                f"Chưa tìm thấy file 'Frontend/views/chat_window.py'!\nChi tiết lỗi: {e}"
+            )
     def _build_tabs(self):
         notebook = ttk.Notebook(self)
         notebook.pack(fill="both", expand=True, padx=15, pady=5)
@@ -81,7 +107,7 @@ class MainAppWindow(tk.Tk):
     def handle_logout(self):
         if messagebox.askyesno("Đăng xuất", "Bạn có chắc chắn muốn đăng xuất?"):
             self.auth_controller.logout()
-            image_cache.clear()  # Giải phóng ảnh khỏi RAM
+            image_cache.clear()
             self.destroy()
             if self.on_logout_callback:
                 self.on_logout_callback()

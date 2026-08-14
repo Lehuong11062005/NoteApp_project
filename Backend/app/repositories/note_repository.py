@@ -41,14 +41,22 @@ class NoteRepository:
         result = self.collection.insert_one(note_data)
         return str(result.inserted_id)
 
-    def get_note_by_id(self, note_id: str) -> Optional[Dict[str, Any]]:
-        """Lấy chi tiết note theo ID."""
-        obj_id = self._to_object_id(note_id)
-        if not obj_id:
-            return None
+    def get_notes_by_user(self, user_id: str, skip: int = 0, limit: int = 50) -> List[Dict[str, Any]]:
+        """Lấy danh sách note theo user_id có phân trang, hỗ trợ cả String và ObjectId."""
+        
+        # 1. Mặc định tìm theo kiểu String
+        query_conditions = [{"user_id": user_id}]
+        
+        # 2. Nếu user_id có thể ép kiểu sang ObjectId, tìm thêm cả kiểu ObjectId
+        obj_id = self._to_object_id(user_id)
+        if obj_id:
+            query_conditions.append({"user_id": obj_id})
+            
+        # Gom điều kiện lại bằng $or (tìm thấy 1 trong 2 kiểu là lấy)
+        query = {"$or": query_conditions}
 
-        note = self.collection.find_one({"_id": obj_id})
-        return self._format_note(note) if note else None
+        cursor = self.collection.find(query).skip(skip).limit(limit)
+        return [self._format_note(item) for item in cursor]
 
     def get_notes_by_user(self, user_id: str, skip: int = 0, limit: int = 50) -> List[Dict[str, Any]]:
         """Lấy danh sách note theo user_id có phân trang."""

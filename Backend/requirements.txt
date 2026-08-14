@@ -6,3 +6,5 @@ uvicorn
 PyJWT
 email-validator
 resend
+google-genai
+openai

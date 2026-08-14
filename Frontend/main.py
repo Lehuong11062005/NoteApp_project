@@ -11,6 +11,7 @@ from Frontend.services.api_client import APIClient
 from Frontend.views.login_view import LoginWindow
 from Frontend.views.main_view import MainAppWindow
 
+
 def start_main_app(user):
     # Khởi chạy màn hình chính với thông tin user vừa đăng nhập
     app = MainAppWindow(user, on_logout_callback=show_login)
