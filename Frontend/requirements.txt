@@ -2,4 +2,5 @@ python-dotenv
 matplotlib
 requests
 tkcalendar
-SpeechRecognition PyAudio
+SpeechRecognition 
+PyAudio

@@ -3,6 +3,10 @@ from typing import Any, Dict, List, Optional
 from fastapi import Depends
 from app.repositories.note_repository import NoteRepository
 from app.schemas.note_schema import NoteCreateSchema, NoteStatusEnum
+from app.utils.datetime_helper import (
+    get_utc_now,
+    parse_vietnam_datetime_to_utc
+)
 
 
 class NoteService:
@@ -10,7 +14,7 @@ class NoteService:
         self.note_repo = note_repo
 
     def _process_dynamic_status(self, note: Dict[str, Any]) -> Dict[str, Any]:
-        """Hàm nội bộ để tính toán động trạng thái Quá hạn."""
+        """Hàm nội bộ để tính toán động trạng thái Quá hạn theo chuẩn múi giờ Việt Nam."""
         if not note:
             return note
             
@@ -18,16 +22,8 @@ class NoteService:
         current_status = note.get("status")
         
         if current_status == NoteStatusEnum.PENDING and reminder_time:
-            if isinstance(reminder_time, str):
-                reminder_dt = datetime.fromisoformat(reminder_time)
-            else:
-                reminder_dt = reminder_time
-                
-            # Ép về timezone UTC để so sánh chuẩn xác
-            if reminder_dt.tzinfo is None:
-                reminder_dt = reminder_dt.replace(tzinfo=timezone.utc)
-
-            if datetime.now(timezone.utc) > reminder_dt:
+            reminder_dt = parse_vietnam_datetime_to_utc(reminder_time)
+            if reminder_dt and get_utc_now() > reminder_dt:
                 note["status"] = NoteStatusEnum.OVERDUE
                 # Cập nhật ngầm xuống DB
                 self.note_repo.update_note(note["_id"], {"status": NoteStatusEnum.OVERDUE})

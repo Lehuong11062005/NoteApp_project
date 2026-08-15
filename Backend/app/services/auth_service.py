@@ -42,7 +42,8 @@ class AuthService:
             )
         payload_data = {
             "sub": str(user["_id"]),
-            "username": user["username"]
+            "username": user["username"],
+            "email": user.get("email", "")
         }
         
         token = create_access_token(data=payload_data)
@@ -54,6 +55,7 @@ class AuthService:
             "user": {
                 "id": str(user["_id"]),
                 "username": user["username"],
-                "fullname": user["fullname"]
+                "fullname": user["fullname"],
+                "email": user.get("email", "")
             }
         }
