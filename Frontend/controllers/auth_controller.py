@@ -22,7 +22,8 @@ class AuthController:
             user_data = data.get("user", {})
             user = User(
                 username=user_data.get("username", ""), 
-                fullname=user_data.get("fullname", "")
+                fullname=user_data.get("fullname", ""),
+                email=user_data.get("email", "")
             )
             return True, user
             

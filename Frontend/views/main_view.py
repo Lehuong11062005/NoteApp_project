@@ -9,7 +9,10 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from Frontend.controllers.auth_controller import AuthController
 from Frontend.controllers.note_controller import NoteController
+from Frontend.controllers.notification_controller import NotificationController
 from Frontend.views.profile_view import ProfileWindow
+from Frontend.views.notification_panel import NotificationPanel
+from Frontend.views.login_notification_popup import LoginNotificationPopup
 from Frontend.views.tabs.notes_tab import NotesTab
 from Frontend.views.tabs.stats_tab import StatsTab
 from Frontend.utils import image_cache
@@ -27,6 +30,9 @@ class MainAppWindow(tk.Tk):
         
         self.auth_controller = AuthController()
         self.note_controller = NoteController()
+        self.notification_controller = NotificationController()
+        self.notification_panel = None
+        self._polling_job = None
 
         self._configure_styles()
         self._build_header()
@@ -38,6 +44,12 @@ class MainAppWindow(tk.Tk):
         # Load dữ liệu lần đầu
         self.notes_tab.load_data()
         self.stats_tab.load_statistics()
+
+        # Kiểm tra popup thông báo sau đăng nhập
+        self.after(500, self._check_login_popup)
+
+        # Kiểm tra thông báo lần đầu sau 2s và lên lịch polling
+        self._polling_job = self.after(2000, self.refresh_notifications)
 
     def _configure_styles(self):
         style = ttk.Style(self)
@@ -65,16 +77,69 @@ class MainAppWindow(tk.Tk):
             bd=0, cursor="hand2", command=lambda: ProfileWindow(self)
         ).pack(side="right", padx=5)
 
-        # 4. Nút Trợ lý AI (Bắt buộc hiển thị)
+        # 4. Nút Thông báo (Chuông)
+        self.btn_notif = tk.Button(
+            header_frame, text="🔔 Thông báo", fg="#475569", bg="#F1F5F9", font=("Arial", 9, "bold"),
+            bd=0, cursor="hand2", padx=8, pady=2, command=self.open_notification_panel
+        )
+        self.btn_notif.pack(side="right", padx=5)
+
+        # 5. Nút Trợ lý AI (Bắt buộc hiển thị)
         btn_ai = tk.Button(
             header_frame, text="🤖 Trợ lý AI", fg="#00897B", bg="#E0F2F1", font=("Arial", 9, "bold"), 
             bd=0, cursor="hand2", padx=8, pady=2, command=self.open_chatbot
         )
         btn_ai.pack(side="right", padx=5)
 
-        # 5. Tên người dùng
+        # 6. Tên người dùng
         fullname = getattr(self.user, "fullname", "Người dùng")
         tk.Label(header_frame, text=f"👤 Xin chào: {fullname}", fg="#666666", bg="#ffffff", font=("Arial", 10, "italic")).pack(side="right", padx=10)
+
+    def open_notification_panel(self):
+        """Mở widget thông báo"""
+        if self.notification_panel and self.notification_panel.winfo_exists():
+            self.notification_panel.lift()
+            self.notification_panel.load_notifications()
+        else:
+            self.notification_panel = NotificationPanel(self, on_update_callback=self.refresh_notifications)
+
+    def refresh_notifications(self):
+        """Hàm cập nhật badge số lượng thông báo chưa đọc và lên lịch lặp lại mỗi 5 giây"""
+        try:
+            count = self.notification_controller.get_unread_count()
+            if count > 0:
+                self.btn_notif.config(
+                    text=f"🔔 Thông báo ({count})",
+                    fg="#DC2626",
+                    bg="#FEE2E2"
+                )
+            else:
+                self.btn_notif.config(
+                    text="🔔 Thông báo",
+                    fg="#475569",
+                    bg="#F1F5F9"
+                )
+        except Exception:
+            pass
+        finally:
+            # Lặp lại sau mỗi 5 giây để thông báo hiển thị theo thời gian thực
+            if self.winfo_exists():
+                self._polling_job = self.after(5000, self.refresh_notifications)
+
+    def _check_login_popup(self):
+        """Kiểm tra và hiển thị popup thông báo nếu có lịch hẹn/thông báo chưa đọc khi vừa đăng nhập"""
+        try:
+            success, notifs = self.notification_controller.get_notifications()
+            if success and notifs:
+                unread = [n for n in notifs if not n.is_read]
+                if unread:
+                    LoginNotificationPopup(
+                        self,
+                        notifications=unread,
+                        on_view_all_callback=self.open_notification_panel
+                    )
+        except Exception:
+            pass
 
     def open_chatbot(self):
         """Hàm mở cửa sổ Chatbot"""
@@ -99,6 +164,11 @@ class MainAppWindow(tk.Tk):
 
     def _on_close(self):
         """Xử lý khi đóng cửa sổ bằng nút X."""
+        if self._polling_job:
+            try:
+                self.after_cancel(self._polling_job)
+            except Exception:
+                pass
         image_cache.clear()
         self.destroy()
         if self.on_logout_callback:
@@ -106,6 +176,11 @@ class MainAppWindow(tk.Tk):
 
     def handle_logout(self):
         if messagebox.askyesno("Đăng xuất", "Bạn có chắc chắn muốn đăng xuất?"):
+            if self._polling_job:
+                try:
+                    self.after_cancel(self._polling_job)
+                except Exception:
+                    pass
             self.auth_controller.logout()
             image_cache.clear()
             self.destroy()

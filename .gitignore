@@ -42,8 +42,11 @@ Thumbs.db
 *.user
 
 # ==========================================
-# 6. File nội bộ (Không push lên remote)
+# 6. File nội bộ & Cấu hình môi trường (Không push lên remote)
 # ==========================================
+.env
+.env.*
+!.env.example
 RULE.MD
 task.md
 CauTruc
