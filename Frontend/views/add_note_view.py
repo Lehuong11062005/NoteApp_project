@@ -27,10 +27,11 @@ from Frontend.services.upload_api import UploadAPI
 
 
 class AddNoteWindow(tk.Toplevel):
-    def __init__(self, parent, note_data=None):
+    def __init__(self, parent, note_data=None, on_success_callback=None):
         super().__init__(parent)
         self.note_controller = NoteController()
         self.note_data = note_data
+        self.on_success_callback = on_success_callback
         self.note_id = getattr(note_data, "id", None) if note_data else None
         self.edit_mode = self.note_id is not None
         self.uploaded_image_url = getattr(note_data, "image_url", None) if self.edit_mode else None
@@ -343,6 +344,11 @@ class AddNoteWindow(tk.Toplevel):
 
         if success:
             messagebox.showinfo("Thành công", msg)
+            if self.on_success_callback:
+                try:
+                    self.on_success_callback()
+                except Exception:
+                    pass
             self.destroy()
         else:
             messagebox.showerror("Lỗi", msg)
