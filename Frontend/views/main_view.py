@@ -21,9 +21,10 @@ class MainAppWindow(tk.Tk):
     def __init__(self, user, on_logout_callback=None):
         super().__init__()
         self.title("Smart Note - Quản lý Ghi chú")
-        self.geometry("860x650") 
+        self.geometry("980x680") 
+        self.minsize(920, 650)
         self.configure(bg="#F5F7FB")
-        self.resizable(False, False)
+        self.resizable(True, True)
 
         self.user = user
         self.on_logout_callback = on_logout_callback
