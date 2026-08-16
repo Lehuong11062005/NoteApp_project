@@ -18,5 +18,5 @@ def chat_with_ai(
     # 3. Gán đè cái ID thật này vào dữ liệu trước khi ném cho Service xử lý
     chat_data.user_id = real_user_id
 
-    # 4. Gọi hàm AI (lúc này chắc chắn 100% ID là thật)
+    # 4. Gọi hàm AI
     return chat_service.answer_chat_query(chat_data)
