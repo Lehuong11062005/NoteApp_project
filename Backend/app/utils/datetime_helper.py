@@ -49,8 +49,9 @@ def parse_vietnam_datetime_to_utc(dt_val: Union[datetime, str, None]) -> Optiona
 
 def to_vietnam_datetime(dt_val: Union[datetime, str, None]) -> Optional[datetime]:
     """
-    Chuyển đổi datetime hoặc chuỗi ISO sang đối tượng datetime theo múi giờ Việt Nam (UTC+7).
-    Nếu datetime là naive (ví dụ lấy từ MongoDB BSON date), mặc định coi là UTC.
+    Chuyển đổi datetime hoặc chuỗi sang đối tượng datetime theo múi giờ Việt Nam (UTC+7).
+    - Nếu là chuỗi ISO hoặc datetime có tzinfo UTC, sẽ chuyển đổi sang múi giờ UTC+7.
+    - Nếu là naive datetime (không có tzinfo, do người dùng nhập theo giờ VN), gán trực tiếp múi giờ Việt Nam.
     """
     if dt_val is None:
         return None
@@ -69,15 +70,16 @@ def to_vietnam_datetime(dt_val: Union[datetime, str, None]) -> Optional[datetime
         return None
 
     if dt.tzinfo is None:
-        # Naive datetime từ MongoDB mặc định là UTC
-        dt = dt.replace(tzinfo=timezone.utc)
+        # Naive datetime (giờ người dùng nhập trên app) là giờ Việt Nam (UTC+7)
+        dt = dt.replace(tzinfo=VIETNAM_TZ)
+        return dt
         
     return dt.astimezone(VIETNAM_TZ)
 
 
 def format_to_vietnam_str(dt_val: Union[datetime, str, None], fmt: str = "%H:%M ngày %d/%m/%Y") -> str:
     """
-    Format thời gian sang chuỗi hiển thị thân thiện theo múi giờ Việt Nam (ví dụ: '19:10 ngày 15/08/2026').
+    Format thời gian sang chuỗi hiển thị thân thiện theo múi giờ Việt Nam (ví dụ: '16:19 ngày 17/08/2026').
     """
     dt_vn = to_vietnam_datetime(dt_val)
     if not dt_vn:

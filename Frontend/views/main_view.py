@@ -34,6 +34,7 @@ class MainAppWindow(tk.Tk):
         self.notification_controller = NotificationController()
         self.notification_panel = None
         self._polling_job = None
+        self._is_active = True
 
         self._configure_styles()
         self._build_header()
@@ -106,26 +107,42 @@ class MainAppWindow(tk.Tk):
 
     def refresh_notifications(self):
         """Hàm cập nhật badge số lượng thông báo chưa đọc và lên lịch lặp lại mỗi 5 giây"""
+        if not getattr(self, "_is_active", True):
+            return
+
+        # Hủy timer cũ trước khi lập lịch mới để tránh chạy trùng lặp ngầm
+        if self._polling_job is not None:
+            try:
+                self.after_cancel(self._polling_job)
+            except Exception:
+                pass
+            self._polling_job = None
+
         try:
-            count = self.notification_controller.get_unread_count()
-            if count > 0:
-                self.btn_notif.config(
-                    text=f"🔔 Thông báo ({count})",
-                    fg="#DC2626",
-                    bg="#FEE2E2"
-                )
-            else:
-                self.btn_notif.config(
-                    text="🔔 Thông báo",
-                    fg="#475569",
-                    bg="#F1F5F9"
-                )
+            if self.winfo_exists():
+                count = self.notification_controller.get_unread_count()
+                if count > 0:
+                    self.btn_notif.config(
+                        text=f"🔔 Thông báo ({count})",
+                        fg="#DC2626",
+                        bg="#FEE2E2"
+                    )
+                else:
+                    self.btn_notif.config(
+                        text="🔔 Thông báo",
+                        fg="#475569",
+                        bg="#F1F5F9"
+                    )
         except Exception:
             pass
         finally:
-            # Lặp lại sau mỗi 5 giây để thông báo hiển thị theo thời gian thực
-            if self.winfo_exists():
-                self._polling_job = self.after(5000, self.refresh_notifications)
+            # Chỉ lên lịch tiếp theo nếu cửa sổ vẫn đang hoạt động
+            if getattr(self, "_is_active", True):
+                try:
+                    if self.winfo_exists():
+                        self._polling_job = self.after(5000, self.refresh_notifications)
+                except Exception:
+                    pass
 
     def _check_login_popup(self):
         """Kiểm tra và hiển thị popup thông báo nếu có lịch hẹn/thông báo chưa đọc khi vừa đăng nhập"""
@@ -165,11 +182,13 @@ class MainAppWindow(tk.Tk):
 
     def _on_close(self):
         """Xử lý khi đóng cửa sổ bằng nút X."""
+        self._is_active = False
         if self._polling_job:
             try:
                 self.after_cancel(self._polling_job)
             except Exception:
                 pass
+            self._polling_job = None
         image_cache.clear()
         self.destroy()
         if self.on_logout_callback:
@@ -177,11 +196,13 @@ class MainAppWindow(tk.Tk):
 
     def handle_logout(self):
         if messagebox.askyesno("Đăng xuất", "Bạn có chắc chắn muốn đăng xuất?"):
+            self._is_active = False
             if self._polling_job:
                 try:
                     self.after_cancel(self._polling_job)
                 except Exception:
                     pass
+                self._polling_job = None
             self.auth_controller.logout()
             image_cache.clear()
             self.destroy()

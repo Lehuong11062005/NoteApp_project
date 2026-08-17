@@ -70,6 +70,25 @@ class NoteService:
         if not update_data:
             return {"message": "Không có dữ liệu để cập nhật"}
 
+        # Xử lý logic hẹn giờ thông minh khi cập nhật:
+        new_reminder = update_data.get("reminder_time")
+        target_status = update_data.get("status", existing_note.get("status"))
+
+        if new_reminder:
+            new_reminder_utc = parse_vietnam_datetime_to_utc(new_reminder)
+            # Nếu giờ hẹn mới ở tương lai (> thời điểm hiện tại)
+            if new_reminder_utc and new_reminder_utc > get_utc_now():
+                # Nếu người dùng không cố ý chọn 'Đã hoàn thành', tự động chuyển về 'Đang chờ'
+                if target_status != NoteStatusEnum.COMPLETED:
+                    update_data["status"] = NoteStatusEnum.PENDING
+                # Reset lại cờ thông báo để scheduler quét và báo khi đến giờ mới
+                update_data["reminder_notified"] = False
+        else:
+            # Nếu người dùng xóa hẹn giờ (reminder_time = None)
+            update_data["reminder_notified"] = False
+            if target_status == NoteStatusEnum.OVERDUE:
+                update_data["status"] = NoteStatusEnum.PENDING
+
         self.note_repo.update_note(note_id, update_data)
         return {"id": note_id, "message": "Cập nhật ghi chú thành công"}
 
